@@ -21,53 +21,57 @@ from termcolor import colored
 #####---------------------------------------------------------
 # Reading just a POSCAR file from the command prompt
 #####--------------------------------------------------------- 
-
-while True:
-	if (sys.argv[1] == "-h"):
-		print('TO execute python3', sys.argv[0])
-		break
-	else:
-		print('Reading a POSCAR file:', sys.argv[1])
-		file = open(sys.argv[1],'r')
-		firstline   = file.readline()
-		secondfline = file.readline()
-		Latvec1 = file.readline()
-		#print ("Lattice vector 1:", (Latvec1), end = '')
-		Latvec2 = file.readline()
-		#print ("Lattice vector 2:", (Latvec2), end = '')
-		Latvec3 = file.readline()
-		#print ("Lattice vector 3:", (Latvec3), end = '')
-		elementtype=file.readline()
-		#print ("Types of elements:", str(elementtype), end = '')
-		numberofatoms=file.readline()
-		#print ("Number of atoms:", (numberofatoms), end = '')
-		a=[]; b=[]; c=[];
-		Latvec1=Latvec1.split()
-		Latvec2=Latvec2.split()
-		Latvec3=Latvec3.split()
-#####---------------------------------------------------------
-		for ai in Latvec1:
-			a.append(float(ai))
-		for bi in Latvec2:
-			b.append(float(bi))
-		for ci in Latvec3:
-			c.append(float(ci))	
-		print ("#####------------------------------------------------")
-		print ('a=', a)
-		print ('b=', b)
-		print ('c=', c)
-		gamma = math.degrees(math.acos(np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))))
-		alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
-		beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
-		print ('\u03B1=', alpha, '\u03B2=', beta, '\u03B3=', gamma)
-		print ("#####------------------------------------------------")
-		print ('||a||=', np.linalg.norm(a))
-		print ('||b||=', np.linalg.norm(b))
-		print ('||c||=', np.linalg.norm(c)) 
-		break
+def poscar():
+	while True:
+		if (sys.argv[1] == "-h"):
+			print('HELP: execute by typing python3', sys.argv[0])
+			break
+		elif (sys.argv[1] == 'POSCAR'):
+			print('Reading a POSCAR file:', sys.argv[1])
+			file = open(sys.argv[1],'r')
+			firstline   = file.readline()
+			secondfline = file.readline()
+			Latvec1 = file.readline()
+			#print ("Lattice vector 1:", (Latvec1), end = '')
+			Latvec2 = file.readline()
+			#print ("Lattice vector 2:", (Latvec2), end = '')
+			Latvec3 = file.readline()
+			#print ("Lattice vector 3:", (Latvec3), end = '')
+			elementtype=file.readline()
+			#print ("Types of elements:", str(elementtype), end = '')
+			numberofatoms=file.readline()
+			#print ("Number of atoms:", (numberofatoms), end = '')
+			a=[]; b=[]; c=[];
+			Latvec1=Latvec1.split()
+			Latvec2=Latvec2.split()
+			Latvec3=Latvec3.split()
+	#####---------------------------------------------------------
+			for ai in Latvec1:
+				a.append(float(ai))
+			for bi in Latvec2:
+				b.append(float(bi))
+			for ci in Latvec3:
+				c.append(float(ci))	
+			print ("#####------------------------------------------------")
+			print ('a=', a)
+			print ('b=', b)
+			print ('c=', c)
+			gamma = math.degrees(math.acos(np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))))
+			alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
+			beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
+			print ('\u03B1=', alpha, '\u03B2=', beta, '\u03B3=', gamma)
+			print ("#####------------------------------------------------")
+			print ('||a||=', np.linalg.norm(a))
+			print ('||b||=', np.linalg.norm(b))
+			print ('||c||=', np.linalg.norm(c)) 
+			break
+		else:
+			print ('NO file eneterd or wrong file') 
+			break			
 #####---------------------------------------------------------
 # Looping over all directories in a current folder containing POSCARS files
 #####--------------------------------------------------------- 
+
 def main():
 	os.system("rm out.dat")
 	mypath = os.getcwd()
@@ -147,7 +151,8 @@ def main():
 				ofile.close()
 
 if __name__ == "__main__":
-	main()
 
+	poscar()
 
+	#main()
 
