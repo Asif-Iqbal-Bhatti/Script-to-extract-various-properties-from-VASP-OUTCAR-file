@@ -3,9 +3,10 @@
 #####---------------------------------------------------------
 #    Credit: Asif Iqbal BHATTI
 #    CODE to convert Cell Matrix to Cell Parameters
-#    python3 this_file
-#    POSCAR VASP5 format
+#    VERSION: This script runs with python3 or later
+#    FORMAT of input file POSCAR VASP5 format
 #    DATE: 05/12/2019
+#    USAGE: python3 sys.argv[0] [POSCAR]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 
@@ -59,14 +60,15 @@ def poscar():
 			gamma = math.degrees(math.acos(np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))))
 			alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
 			beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
-			print ('\u03B1=', alpha, '\u03B2=', beta, '\u03B3=', gamma)
+			vol = np.linalg.norm(a)*np.linalg.norm(b)*np.linalg.norm(c)*np.sqrt(1 + 2*math.cos(alpha)*math.cos(beta)*math.cos(gamma) - math.cos(alpha)**2 - math.cos(beta)**2 - math.cos(gamma)**2)
+			print ('\u03B1=', alpha, '\u03B2=', beta, '\u03B3=', gamma, 'Vol=', vol)
 			print ("#####------------------------------------------------")
 			print ('||a||=', np.linalg.norm(a))
 			print ('||b||=', np.linalg.norm(b))
 			print ('||c||=', np.linalg.norm(c)) 
 			break
 		else:
-			print ('NO file eneterd or wrong file') 
+			print ('NO file entered or wrong filename') 
 			break			
 #####---------------------------------------------------------
 # Looping over all directories in a current folder containing POSCARS files
@@ -87,6 +89,7 @@ def main():
 				#print (f.read())
 				#f.close()	
 				fo = open(filepath, 'r')
+				
 				ofile=open('out.dat','a+')
 				print (colored('>>>>>>>>  Name of the file: ','yellow'), fo.name, end = '\n', flush=True)
 				ofile.write (fo.name + '\n')
