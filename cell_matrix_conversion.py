@@ -5,7 +5,7 @@
 #    CODE to convert Cell Matrix to Cell Parameters
 #    VERSION: This script runs with python3 or later
 #    FORMAT of input file POSCAR VASP5 format
-#    DATE: 05/12/2019
+#    DATE: 08/12/2019
 #    USAGE: python3 sys.argv[0] [POSCAR]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
@@ -61,6 +61,7 @@ def poscar():
 			alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
 			beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
 			vol = np.linalg.norm(a)*np.linalg.norm(b)*np.linalg.norm(c)*np.sqrt(1 + 2*math.cos(alpha)*math.cos(beta)*math.cos(gamma) - math.cos(alpha)**2 - math.cos(beta)**2 - math.cos(gamma)**2)
+			print ("ratio c/a = %2f" %(np.linalg.norm(c) / np.linalg.norm(a) ))
 			print ("#####------------------------------------------------")
 			print ('||a||=%2f, \u03B1= %2f' %(np.linalg.norm(a), alpha))
 			print ('||b||=%2f  \u03B2= %2f' %(np.linalg.norm(b), beta))
