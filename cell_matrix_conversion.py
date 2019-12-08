@@ -61,11 +61,11 @@ def poscar():
 			alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
 			beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
 			vol = np.linalg.norm(a)*np.linalg.norm(b)*np.linalg.norm(c)*np.sqrt(1 + 2*math.cos(alpha)*math.cos(beta)*math.cos(gamma) - math.cos(alpha)**2 - math.cos(beta)**2 - math.cos(gamma)**2)
-			print ('\u03B1=', alpha, '\u03B2=', beta, '\u03B3=', gamma, 'Vol=', vol)
 			print ("#####------------------------------------------------")
-			print ('||a||=', np.linalg.norm(a))
-			print ('||b||=', np.linalg.norm(b))
-			print ('||c||=', np.linalg.norm(c)) 
+			print ('||a||=%2f, \u03B1= %2f' %(np.linalg.norm(a), alpha))
+			print ('||b||=%2f  \u03B2= %2f' %(np.linalg.norm(b), beta))
+			print ('||c||=%2f  \u03B3= %2f' %(np.linalg.norm(c), gamma))
+			print ('Vol= %2f' %(vol))			
 			break
 		else:
 			print ('NO file entered or wrong filename') 
