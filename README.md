@@ -1,2 +1,2 @@
-# Cell Matrix Conversion script
-Convert VASP POSCAR Lattice vectors to cell parameters
+# scipt to convert Cell Matrix to Cell parameter
+Convert VASP POSCAR Lattice vectors to cell parameter
