@@ -5,8 +5,8 @@
 #    CODE to convert Cell Matrix to Cell Parameters
 #    VERSION: This script runs with python3 or later
 #    FORMAT of input file POSCAR VASP5 format
-#    DATE: 19/12/2019
-#    USAGE: python3 sys.argv[0] [POSCAR]
+#    DATE: 22/12/2019
+#    USAGE: python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 
@@ -60,14 +60,15 @@ def poscar():
 			gamma = math.degrees(math.acos(np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))))
 			alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
 			beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
-			print ('\u03B1=', alpha, '\u03B2=', beta, '\u03B3=', gamma)
+			print ("ratio c/a = %2f" %(np.linalg.norm(c) / np.linalg.norm(a) ))
 			print ("#####------------------------------------------------")
-			print ('||a||=', np.linalg.norm(a))
-			print ('||b||=', np.linalg.norm(b))
-			print ('||c||=', np.linalg.norm(c)) 
+			print ('||a||=%2f, \u03B1= %2f' %(np.linalg.norm(a), alpha))
+			print ('||b||=%2f  \u03B2= %2f' %(np.linalg.norm(b), beta))
+			print ('||c||=%2f  \u03B3= %2f' %(np.linalg.norm(c), gamma))
+			print ('Vol= %3.5f' %(volume(a,b,c,math.radians(alpha),math.radians(beta),math.radians(gamma) )))			
 			break
 		else:
-			print ('NO file eneterd or wrong file') 
+			print ('NO file entered or wrong filename') 
 			break			
 #####---------------------------------------------------------
 # Looping over all directories in a current folder containing POSCARS files
@@ -142,6 +143,7 @@ def main():
 					gamma = math.degrees(math.acos(np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))))
 					alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
 					beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
+					VOLUME = np.dot(a, np.cross(b,c))		
 					print ('\u03B1=', alpha, '\u03B2=', beta, '\u03B3=', gamma)
 					ofile.write ("'\u03B1=' {} '\u03B2=' {} '\u03B3=' {}\n".format(alpha,beta,gamma))
 					print ("#####------------------------------------------------")
@@ -150,15 +152,21 @@ def main():
 					print ('||b||=', np.linalg.norm(b))
 					ofile.write ("'||b||=' {}\n".format(np.linalg.norm(b)))			
 					print ('||c||=', np.linalg.norm(c)) 
-					ofile.write ("'||c||=' {}\n".format(np.linalg.norm(c)))			
+					ofile.write ("'||c||=' {}\n".format(np.linalg.norm(c)))
+					print ('Vol= %3.5f' %(VOLUME))						
 					ofile.write ("***************************************************\n")
 					ofile.close()
 	print ("Number of folders detected: ", count)
+
+#### math.sin fucntion takes arguments in radians ONLY
+def volume(a,b,c,alpha,beta,gamma):
+	length = np.linalg.norm(a) * np.linalg.norm(b) * np.linalg.norm(c) 
+	volume = length * ( np.sqrt(1 + 2 * math.cos(alpha) * math.cos(beta) * math.cos(gamma) - math.cos(alpha)**2 - math.cos(beta)**2 - math.cos(gamma)**2) )
+	return volume
+
 if __name__ == "__main__":
 
 	#poscar()
 
 	main()
-
-
 
