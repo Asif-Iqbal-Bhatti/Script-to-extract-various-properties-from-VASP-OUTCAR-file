@@ -71,7 +71,7 @@ def poscar():
 			print ('NO file entered or wrong filename') 
 			break			
 #####---------------------------------------------------------
-# Looping over all directories in a current folder containing POSCARS files
+# Looping over all directories in a current folder containing POSCAR files
 #####--------------------------------------------------------- 
 
 def main():
