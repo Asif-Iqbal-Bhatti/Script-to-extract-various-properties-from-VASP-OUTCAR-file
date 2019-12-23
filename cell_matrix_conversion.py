@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 #####---------------------------------------------------------
 #####---------------------------------------------------------
-#    Credit: Asif Iqbal BHATTI
-#    CODE to convert Cell Matrix to Cell Parameters
-#    VERSION: This script runs with python3 or later
-#    FORMAT of input file POSCAR VASP5 format
-#    DATE: 23/12/2019
-#    USAGE: python3 sys.argv[0]
+#    Credit	: 	Asif Iqbal BHATTI
+#    CODE to: 	convert Cell Matrix to Cell Parameters
+#    VERSION: 	This script runs with python3 or later
+#    FORMAT	:	POSCAR VASP5 format
+#    DATE	: 	22/12/2019
+#    USAGE	: 	python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 
@@ -19,10 +19,10 @@ from os.path import isfile, join
 from pathlib import Path
 from termcolor import colored
 
-#####---------------------------------------------------------
-# Reading just a POSCAR file from the command prompt
-#####--------------------------------------------------------- 
-
+##########################---------------------------------------------------------
+#				 Reading just a POSCAR file from the command prompt
+##########################---------------------------------------------------------
+ 
 def poscar():
 	while True:
 		if (sys.argv[1] == "-h"):
@@ -30,8 +30,7 @@ def poscar():
 			break
 		elif (sys.argv[1] == 'POSCAR'):
 			print('Reading a POSCAR file:', sys.argv[1])
-			pos = []; kk = [];
-			lattice = [];
+			pos = []; kk = []; lattice = [];
 			file = open(sys.argv[1],'r')
 			
 			firstline   = file.readline()
@@ -59,7 +58,7 @@ def poscar():
 				
 			file.close()	
 
-	#####---------------------------------------------------------			
+##########################---------------------------------------------------------
 			a=[]; b=[]; c=[];
 			Latvec1=Latvec1.split()
 			Latvec2=Latvec2.split()
@@ -70,7 +69,9 @@ def poscar():
 				b.append(float(bi))
 			for ci in Latvec3:
 				c.append(float(ci))
-	#####---------------------------------------------------------				
+				
+##########################---------------------------------------------------------
+
 			print ("//////---------------Lattice vectors-----------------")				
 			lattice = np.array([a] + [b] + [c])
 			print (lattice)
@@ -131,7 +132,7 @@ def poscar():
 def main_poscar():
 	count = 0
 	os.system("rm out.dat")
-	VOL_P = [];
+	VOL_P = []; pos = []; kk = []; lattice = [];
 	mypath = os.getcwd()
 	#print (mypath)
 	print ("               >>>>> Converting Cell Matrix to Cell Parameters <<<<<<")
@@ -139,7 +140,6 @@ def main_poscar():
 		if os.path.isdir(os.path.join(mypath, entry)):
 			#print (entry)
 			for file in os.listdir(entry):
-				#print (file)
 				if file == "POSCAR":
 					count+=1
 					filepath = os.path.join(entry, file)
@@ -168,15 +168,24 @@ def main_poscar():
 					numberofatoms=fo.readline()
 					#print ("Number of atoms:", (numberofatoms), end = '')
 					#ofile.write ((numberofatoms))
-					ofile.write ("\n")
+					Coordtype=fo.readline()
+					print ("Coordtype:", (Coordtype), end = '')	
+					print ("//////---------------Atomic positions-----------------")				
+					for x in range(int(numberofatoms)):
+						coord = fo.readline().split()
+						coord = [float(i) for i in coord]
+						pos = pos + [coord]
+					pos = np.array(pos)
+					#print (pos)
 					
+					ofile.write ("\n")			
 					fo.close()
-		#####---------------------------------------------------------
+##########################---------------------------------------------------------
 					a=[]; b=[]; c=[];
 					Latvec1=Latvec1.split()
 					Latvec2=Latvec2.split()
 					Latvec3=Latvec3.split()
-		#####---------------------------------------------------------
+##########################---------------------------------------------------------
 					for ai in Latvec1:
 						a.append(float(ai))
 					for bi in Latvec2:
@@ -190,7 +199,7 @@ def main_poscar():
 					ofile.write ("'b=' {}\n".format(b))
 					print ('c=', c)
 					ofile.write ("'c=' {}\n".format(c))			
-		#####---------------------------------------------------------
+##########################---------------------------------------------------------
 		
 					alpha, beta, gamma = lattice_angles(a,b,c)
 					VOL_POS = np.dot(a, np.cross(b,c))	
@@ -214,7 +223,7 @@ def main_poscar():
 def main_contcar():
 	count = 0
 	os.system("rm out_contcar.dat")
-	VOL_C = [];	
+	VOL_C = [];	pos = []; kk = []; lattice = [];
 	mypath = os.getcwd()
 	print ("               >>>>> Converting Cell Matrix to Cell Parameters <<<<<<")
 	for entry in os.listdir(mypath):
@@ -238,15 +247,25 @@ def main_contcar():
 					elementtype=fo.readline()
 					numberofatoms=fo.readline()
 					
-					ofile.write ("\n")
+					Coordtype=fo.readline()
+					print ("Coordtype:", (Coordtype), end = '')	
+					print ("//////---------------Atomic positions-----------------")				
+					for x in range(int(numberofatoms)):
+						coord = fo.readline().split()
+						coord = [float(i) for i in coord]
+						pos = pos + [coord]
+					pos = np.array(pos)
+					#print (pos)
 					
+					ofile.write ("\n")	
+										
 					fo.close()
-		#####---------------------------------------------------------
+##########################---------------------------------------------------------
 					a=[]; b=[]; c=[];
 					Latvec1=Latvec1.split()
 					Latvec2=Latvec2.split()
 					Latvec3=Latvec3.split()
-		#####---------------------------------------------------------
+##########################---------------------------------------------------------
 					for ai in Latvec1:
 						a.append(float(ai))
 					for bi in Latvec2:
@@ -260,7 +279,7 @@ def main_contcar():
 					ofile.write ("'b=' {}\n".format(b))
 					print ('c=', c)
 					ofile.write ("'c=' {}\n".format(c))			
-		#####---------------------------------------------------------
+##########################---------------------------------------------------------
 
 					alpha, beta, gamma = lattice_angles(a,b,c)
 					VOL_CON = np.dot(a, np.cross(b,c))
@@ -306,6 +325,8 @@ def volume_diff(VOL_P, VOL_C):
 	for i in range(int(n)):
 		print ("The difference is: %12.6f %12.6f %15.8f " %(VOL_C[i], VOL_P[i], VOL_C[i] - VOL_P[i]) )
 	
+
+
 	
 if __name__ == "__main__":
 
