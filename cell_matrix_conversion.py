@@ -5,12 +5,12 @@
 #    CODE to convert Cell Matrix to Cell Parameters
 #    VERSION: This script runs with python3 or later
 #    FORMAT of input file POSCAR VASP5 format
-#    DATE: 22/12/2019
+#    DATE: 23/12/2019
 #    USAGE: python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 
-import os, sys
+import os, sys, spglib
 import math, glob
 import numpy as np
 import subprocess
@@ -22,6 +22,7 @@ from termcolor import colored
 #####---------------------------------------------------------
 # Reading just a POSCAR file from the command prompt
 #####--------------------------------------------------------- 
+
 def poscar():
 	while True:
 		if (sys.argv[1] == "-h"):
@@ -29,7 +30,10 @@ def poscar():
 			break
 		elif (sys.argv[1] == 'POSCAR'):
 			print('Reading a POSCAR file:', sys.argv[1])
+			pos = []; kk = [];
+			lattice = [];
 			file = open(sys.argv[1],'r')
+			
 			firstline   = file.readline()
 			secondfline = file.readline()
 			Latvec1 = file.readline()
@@ -39,21 +43,71 @@ def poscar():
 			Latvec3 = file.readline()
 			#print ("Lattice vector 3:", (Latvec3), end = '')
 			elementtype=file.readline()
-			#print ("Types of elements:", str(elementtype), end = '')
+			print ("Types of elements:", str(elementtype), end = '')
 			numberofatoms=file.readline()
-			#print ("Number of atoms:", (numberofatoms), end = '')
+			print ("Number of atoms:", (numberofatoms), end = '')
+			Coordtype=file.readline()
+			print ("Coordtype:", (Coordtype), end = '')	
+			
+			print ("//////---------------Atomic positions-----------------")				
+			for x in range(int(numberofatoms)):
+				coord = file.readline().split()
+				coord = [float(i) for i in coord]
+				pos = pos + [coord]
+			pos = np.array(pos)
+			print (pos)
+				
+			file.close()	
+
+	#####---------------------------------------------------------			
 			a=[]; b=[]; c=[];
 			Latvec1=Latvec1.split()
 			Latvec2=Latvec2.split()
-			Latvec3=Latvec3.split()
-	#####---------------------------------------------------------
+			Latvec3=Latvec3.split()	
 			for ai in Latvec1:
 				a.append(float(ai))
 			for bi in Latvec2:
 				b.append(float(bi))
 			for ci in Latvec3:
-				c.append(float(ci))	
-			print ("#####------------------------------------------------")
+				c.append(float(ci))
+	#####---------------------------------------------------------				
+			print ("//////---------------Lattice vectors-----------------")				
+			lattice = np.array([a] + [b] + [c])
+			print (lattice)
+			print (" ")
+			print ("//////---------------Space group-----------------")		
+			print (" ")
+			numbers = [1,1]			
+			cell = (lattice, pos, numbers)
+			print(spglib.get_spacegroup(cell, symprec=1e-5))
+			#print(spglib.get_symmetry(cell, symprec=1e-5))
+			print(spglib.niggli_reduce(lattice, eps=1e-5))
+			
+			#mesh = [8, 8, 8]
+			#mapping, grid = spglib.get_ir_reciprocal_mesh(mesh, cell, is_shift=[0, 0, 0])
+			## All k-points and mapping to ir-grid points
+			#for i, (ir_gp_id, gp) in enumerate(zip(mapping, grid)):
+			#	print("%3d ->%3d %s" % (i, ir_gp_id, gp.astype(float) / mesh))
+			#
+			## Irreducible k-points
+			#print("Number of ir-kpoints: %d" % len(np.unique(mapping)))
+			#print(grid[np.unique(mapping)] / np.array(mesh, dtype=float))
+			#
+			##
+			## With shift
+			##
+			#mapping, grid = spglib.get_ir_reciprocal_mesh(mesh, cell, is_shift=[1, 1, 1])
+			#
+			## All k-points and mapping to ir-grid points
+			#for i, (ir_gp_id, gp) in enumerate(zip(mapping, grid)):
+			#	print("%3d ->%3d %s" % (i, ir_gp_id, (gp + [0.5, 0.5, 0.5]) / mesh))
+			#
+			## Irreducible k-points
+			#print("Number of ir-kpoints: %d" % len(np.unique(mapping)))
+			#print((grid[np.unique(mapping)] + [0.5, 0.5, 0.5]) / mesh)
+			print (" ")
+			print ("/////------------------------------------------------")
+			
 			print ('a=', a)
 			print ('b=', b)
 			print ('c=', c)
