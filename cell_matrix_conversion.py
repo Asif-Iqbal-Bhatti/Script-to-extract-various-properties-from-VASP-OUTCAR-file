@@ -149,7 +149,7 @@ def main_poscar():
 	VOL_P = []; pos = []; kk = []; lattice = [];
 	mypath = os.getcwd()
 	#print (mypath)
-	print ("               >>>>> Converting Cell Matrix to Cell Parameters <<<<<<")
+
 	for entry in os.listdir(mypath):
 		if os.path.isdir(os.path.join(mypath, entry)):
 			#print (entry)
@@ -254,7 +254,7 @@ def main_contcar():
 	count = 0
 	os.system("rm out_contcar.dat")
 	VOL_C = [];	pos = []; kk = []; lattice = []; sum = 0
-	mypath = os.getcwd()nj
+	mypath = os.getcwd()
 	print ("               >>>>> Converting Cell Matrix to Cell Parameters <<<<<<")
 	for entry in os.listdir(mypath):
 		if os.path.isdir(os.path.join(mypath, entry)):	
@@ -368,17 +368,45 @@ def volume_diff(VOL_P, VOL_C):
 	
 def Introduction():
     global message
-    message = "convert Cell Matrix to Cell Parameters"
+    message = "             >>>>> Converting Cell Matrix to Cell Parameters <<<<<<"
     print(message)
 
 	
 if __name__ == "__main__":
 
 	#poscar()
-
+	Introduction()
 	VOL_P = main_poscar()
 	VOL_C = main_contcar()
 	print (" ----------------------------------------------------       ")
 	print (" ----------------------------------------------------       ")
 	print (" ----------------------------------------------------       ")
 	volume_diff(VOL_P, VOL_C)
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
