@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+'''
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 #    Credit	: 	Asif Iqbal BHATTI
@@ -9,7 +10,7 @@
 #    USAGE	: 	python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
-
+'''
 import os, sys, spglib
 import math, glob
 import numpy as np
@@ -18,11 +19,11 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 from termcolor import colored
-
+'''
 ##########################---------------------------------------------------------
 #				 Reading just a POSCAR file from the command prompt
 ##########################---------------------------------------------------------
- 
+'''
 def poscar():
 	while True:
 		if (sys.argv[1] == "-h"):
@@ -30,7 +31,7 @@ def poscar():
 			break
 		elif (sys.argv[1] == 'POSCAR'):
 			print('Reading a POSCAR file:', sys.argv[1])
-			pos = []; kk = []; lattice = [];
+			pos = []; kk = []; lattice = []; sum = 0
 			file = open(sys.argv[1],'r')
 			
 			firstline   = file.readline()
@@ -42,13 +43,25 @@ def poscar():
 			Latvec3 = file.readline()
 			#print ("Lattice vector 3:", (Latvec3), end = '')
 			elementtype=file.readline()
-			print ("Types of elements:", str(elementtype), end = '')
+			elementtype = elementtype.split()			
+			print ("Types of elements:", str(elementtype), end = '\n')
 			numberofatoms=file.readline()
-			print ("Number of atoms:", (numberofatoms), end = '')
 			Coordtype=file.readline()
-			print ("Coordtype:", (Coordtype), end = '')	
+			print ("Coordtype:", (Coordtype), end = '\n')	
+##########################---------------------------------------------------------
+
+			print ("*************-------------------# of Atoms--------------------")
 			
-			print ("//////---------------Atomic positions-----------------")				
+			nat = numberofatoms.split()
+			nat = [int(i) for i in nat]
+			print (nat)
+			for i in nat:
+				sum = sum + i
+			numberofatoms = sum
+			print ("Number of atoms:", (numberofatoms), end = '\n')
+##########################---------------------------------------------------------
+
+			print ("*************---------------Atomic positions------------------")				
 			for x in range(int(numberofatoms)):
 				coord = file.readline().split()
 				coord = [float(i) for i in coord]
@@ -82,7 +95,7 @@ def poscar():
 			cell = (lattice, pos, numbers)
 			print(spglib.get_spacegroup(cell, symprec=1e-5))
 			#print(spglib.get_symmetry(cell, symprec=1e-5))
-			print(spglib.niggli_reduce(lattice, eps=1e-5))
+			#print(spglib.niggli_reduce(lattice, eps=1e-5))
 			
 			#mesh = [8, 8, 8]
 			#mapping, grid = spglib.get_ir_reciprocal_mesh(mesh, cell, is_shift=[0, 0, 0])
@@ -106,6 +119,7 @@ def poscar():
 			## Irreducible k-points
 			#print("Number of ir-kpoints: %d" % len(np.unique(mapping)))
 			#print((grid[np.unique(mapping)] + [0.5, 0.5, 0.5]) / mesh)
+
 			print (" ")
 			print ("/////------------------------------------------------")
 			
@@ -141,7 +155,7 @@ def main_poscar():
 			#print (entry)
 			for file in os.listdir(entry):
 				if file == "POSCAR":
-					count+=1
+					count+=1; sum = 0
 					filepath = os.path.join(entry, file)
 					#f = open(filepath, 'r')
 					#print (f.read())
@@ -163,28 +177,43 @@ def main_poscar():
 					#print ("Lattice vector 3:", (Latvec3), end = '')
 					#ofile.write (Latvec3)
 					elementtype=fo.readline()
+					elementtype = elementtype.split()						
 					#print ("Types of elements:", str(elementtype), end = '')
 					#ofile.write (str(elementtype))
 					numberofatoms=fo.readline()
 					#print ("Number of atoms:", (numberofatoms), end = '')
 					#ofile.write ((numberofatoms))
 					Coordtype=fo.readline()
-					print ("Coordtype:", (Coordtype), end = '')	
-					print ("//////---------------Atomic positions-----------------")				
+
+##########################---------------------------------------------------------
+					print ("**********-------------------# of Atoms--------------------")
+					
+					nat = numberofatoms.split()
+					nat = [int(i) for i in nat]
+					print (nat)
+					for i in nat:
+						sum = sum + i
+					numberofatoms = sum
+					print ("Number of atoms:", (numberofatoms), end = '\n')
+##########################---------------------------------------------------------					
+					print ("//////---------------Atomic positions-----------------")
+					print ("Coordtype:", (Coordtype), end = '')						
 					for x in range(int(numberofatoms)):
 						coord = fo.readline().split()
 						coord = [float(i) for i in coord]
 						pos = pos + [coord]
 					pos = np.array(pos)
-					#print (pos)
+					print (pos)
 					
 					ofile.write ("\n")			
 					fo.close()
 ##########################---------------------------------------------------------
+
 					a=[]; b=[]; c=[];
 					Latvec1=Latvec1.split()
 					Latvec2=Latvec2.split()
 					Latvec3=Latvec3.split()
+					
 ##########################---------------------------------------------------------
 					for ai in Latvec1:
 						a.append(float(ai))
@@ -198,7 +227,8 @@ def main_poscar():
 					print ('b=', b)
 					ofile.write ("'b=' {}\n".format(b))
 					print ('c=', c)
-					ofile.write ("'c=' {}\n".format(c))			
+					ofile.write ("'c=' {}\n".format(c))		
+					
 ##########################---------------------------------------------------------
 		
 					alpha, beta, gamma = lattice_angles(a,b,c)
@@ -223,14 +253,14 @@ def main_poscar():
 def main_contcar():
 	count = 0
 	os.system("rm out_contcar.dat")
-	VOL_C = [];	pos = []; kk = []; lattice = [];
-	mypath = os.getcwd()
+	VOL_C = [];	pos = []; kk = []; lattice = []; sum = 0
+	mypath = os.getcwd()nj
 	print ("               >>>>> Converting Cell Matrix to Cell Parameters <<<<<<")
 	for entry in os.listdir(mypath):
 		if os.path.isdir(os.path.join(mypath, entry)):	
 			for file in os.listdir(entry):
 				if file == "CONTCAR":
-					count+=1
+					count+=1; sum = 0
 					filepath = os.path.join(entry, file)
 					fo = open(filepath, 'r')
 					
@@ -245,10 +275,21 @@ def main_contcar():
 					Latvec2 = fo.readline()
 					Latvec3 = fo.readline()
 					elementtype=fo.readline()
+					elementtype = elementtype.split()					
 					numberofatoms=fo.readline()
-					
 					Coordtype=fo.readline()
-					print ("Coordtype:", (Coordtype), end = '')	
+					print ("Coordtype:", (Coordtype), end = '')
+##########################---------------------------------------------------------
+					print ("**********-------------------# of Atoms--------------------")
+					
+					nat = numberofatoms.split()
+					nat = [int(i) for i in nat]
+					print (nat)
+					for i in nat:
+						sum = sum + i
+					numberofatoms = sum
+					print ("Number of atoms:", (numberofatoms), end = '\n')
+##########################---------------------------------------------------------						
 					print ("//////---------------Atomic positions-----------------")				
 					for x in range(int(numberofatoms)):
 						coord = fo.readline().split()
@@ -325,7 +366,10 @@ def volume_diff(VOL_P, VOL_C):
 	for i in range(int(n)):
 		print ("The difference is: %12.6f %12.6f %15.8f " %(VOL_C[i], VOL_P[i], VOL_C[i] - VOL_P[i]) )
 	
-
+def Introduction():
+    global message
+    message = "convert Cell Matrix to Cell Parameters"
+    print(message)
 
 	
 if __name__ == "__main__":
@@ -338,31 +382,3 @@ if __name__ == "__main__":
 	print (" ----------------------------------------------------       ")
 	print (" ----------------------------------------------------       ")
 	volume_diff(VOL_P, VOL_C)
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
