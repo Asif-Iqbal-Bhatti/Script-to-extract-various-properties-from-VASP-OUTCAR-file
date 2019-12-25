@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 '''
 #####---------------------------------------------------------
 #####---------------------------------------------------------
@@ -6,11 +7,12 @@
 #    CODE to: 	convert Cell Matrix to Cell Parameters
 #    VERSION: 	This script runs with python3 or later
 #    FORMAT	:	POSCAR VASP5 format
-#    DATE	: 	22/12/2019
+#    DATE	: 	25/12/2019
 #    USAGE	: 	python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 '''
+
 import os, sys, spglib
 import math, glob
 import numpy as np
@@ -19,11 +21,13 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 from termcolor import colored
+
 '''
 ##########################---------------------------------------------------------
 #				 Reading just a POSCAR file from the command prompt
 ##########################---------------------------------------------------------
 '''
+
 def poscar():
 	while True:
 		if (sys.argv[1] == "-h"):
@@ -255,10 +259,11 @@ def main_contcar():
 	os.system("rm out_contcar.dat")
 	VOL_C = [];	pos = []; kk = []; lattice = []; sum = 0
 	mypath = os.getcwd()
-	print ("               >>>>> Converting Cell Matrix to Cell Parameters <<<<<<")
+	
 	for entry in os.listdir(mypath):
 		if os.path.isdir(os.path.join(mypath, entry)):	
 			for file in os.listdir(entry):
+				
 				if file == "CONTCAR":
 					count+=1; sum = 0
 					filepath = os.path.join(entry, file)
@@ -350,7 +355,7 @@ def volume(a,b,c,alpha,beta,gamma):
 	volume = length * ( np.sqrt(1 + 2 * math.cos(alpha) * math.cos(beta) * math.cos(gamma) - math.cos(alpha)**2 - math.cos(beta)**2 - math.cos(gamma)**2) )
 	return volume
 
-# Ordering of angles does matter
+#### Ordering of angles does matter
 def lattice_angles(a,b,c):
 	### gamma = Cos-1( (a.b)/||a||.||b|| )
 	### alpha = Cos-1( (b.c)/||b||.||c|| )
@@ -359,19 +364,47 @@ def lattice_angles(a,b,c):
 	alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
 	beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
 	return alpha, beta, gamma
-
+####
 def volume_diff(VOL_P, VOL_C):
 	n=os.popen("find . -mindepth 1 -maxdepth 1 -type d | wc -l").read()
-	print ("VOLUME Diff %18s %12s %15.15s" %("CONTCAR",  "POSCAR",  "contcar-poscar"))
+	print ("VOL Diff A^3 %18s %12s %15.15s" %("CONTCAR",  "POSCAR",  "contcar-poscar"))
 	for i in range(int(n)):
 		print ("The difference is: %12.6f %12.6f %15.8f " %(VOL_C[i], VOL_P[i], VOL_C[i] - VOL_P[i]) )
-	
+####	
 def Introduction():
     global message
-    message = "             >>>>> Converting Cell Matrix to Cell Parameters <<<<<<"
+    message = "     >>>>> Converting Cell Matrix to Cell Parameters <<<<<< \
+					Different part of the script be run in the main program "
     print(message)
-
 	
+####
+def energy():
+	mypath = os.getcwd()
+	E=[]; dir_list=[]; count = 0; dir_E=[]
+	print ("               >>>>> Extracting Energies from directories  <<<<<<")
+	for entry in os.listdir(mypath):
+		if os.path.isdir(os.path.join(mypath, entry)):
+			dir_list.append(entry); 
+			
+			for file in os.listdir(entry):
+				if file == "OUTCAR":
+					filepath = os.path.join(entry, file)
+					f = open(filepath,'r')
+					lines = f.readlines()
+					f.close()
+					for i in lines:
+						if "  free  energy   TOTEN  =" in i:
+							m=float(i.split()[4])
+					E.append(m)
+					count+=1
+	#print (dir_list); print (E)
+	
+	for i in range(count):
+		print (dir_list[i], "-->" , E[i] )
+		
+
+					
+####
 if __name__ == "__main__":
 
 	#poscar()
@@ -382,31 +415,6 @@ if __name__ == "__main__":
 	print (" ----------------------------------------------------       ")
 	print (" ----------------------------------------------------       ")
 	volume_diff(VOL_P, VOL_C)
+	energy()
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
