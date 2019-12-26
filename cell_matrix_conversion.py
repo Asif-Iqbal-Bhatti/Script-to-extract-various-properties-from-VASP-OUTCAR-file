@@ -7,7 +7,7 @@
 #    CODE to: 	convert Cell Matrix to Cell Parameters
 #    VERSION: 	This script runs with python3 or later
 #    FORMAT	:	POSCAR VASP5 format
-#    DATE	: 	25/12/2019
+#    DATE	: 	22/12/2019
 #    USAGE	: 	python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
@@ -402,7 +402,54 @@ def energy():
 	for i in range(count):
 		print (dir_list[i], "-->" , E[i] )
 		
+def elastic_matrix():
+	while True:
+		if (sys.argv[1] == "-h"):
+			print('HELP: execute by typing python3', sys.argv[0])
+			break
+		elif (sys.argv[1] == 'OUTCAR'):
+			print('Reading OUTCAR file:', sys.argv[1])
+			s=np.zeros((6,6))
+			c=np.zeros((6,6))
+			file = open(sys.argv[1],'r')
+			lines = file.readlines()			
+			file.close()	
+			for i in lines:
+				if "TOTAL ELASTIC MODULI (kBar)" in i:
+					ll=lines.index(i)
+			for i in range(0,6):
+				l=lines[ll+3+i]
+				word = l.split()
+				s[i][:] = word[1:7]
+				for j in range(0,6):
+					c[i][j] = float(s[i][j])/10.0
+			Cij=np.matrix(c)
+			print (Cij)
+##########--------------------Compliance tensor------------------------------------
+##########--------------------  s_{ij} = C_{ij}^{-1}
+			Sij = np.linalg.inv(Cij)
+			#-------------------Voigt bulk modulus  K_v  $(GPa)$
+			#-----------9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
 
+			Kv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0])) / 9.0
+#--------------------------------Reuss bulk modulus  K_R  $(GPa)$
+#-------------------  1/K_R = (s_{11}+s_{22}+s_{33}) + 2(s_{12} + s_{23} + s_{31})$
+			Kr = 1/((Sij[0,0] + Sij[1,1] + Sij[2,2]) + 2 * (Sij[0,1] + Sij[1,2] + Sij[2,0]))
+			Gv = (4 * (Cij[0,0] + Cij[1,1] + Cij[2,2]) - 4 * (Cij[0,1] + Cij[1,2] + Cij[2,0]) + 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0
+			## Young's: Voigt
+			Ev = (9*Kv*Gv)/(3*Kv + Gv)
+		
+			## Poisson's ratio: Voigt
+			Nu_V = (3*Kv - Ev)/(6*Kv)
+		
+			## P-wave modulus, M: Voigt
+			MV = Kv + (4*Gv/3.0)
+			Kvrh = (Kv + Kr)/2.0
+			print (Ev, Nu_V, MV, Kvrh)
+			break
+		else:
+			print ('NO file entered or wrong filename') 
+			break		
 					
 ####
 if __name__ == "__main__":
@@ -416,5 +463,33 @@ if __name__ == "__main__":
 	print (" ----------------------------------------------------       ")
 	volume_diff(VOL_P, VOL_C)
 	energy()
+	#elastic_matrix()
 
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
