@@ -7,7 +7,7 @@
 #    CODE to: 	convert Cell Matrix to Cell Parameters
 #    VERSION: 	This script runs with python3 or later
 #    FORMAT	:	POSCAR VASP5 format
-#    DATE	: 	22/12/2019
+#    DATE	: 	28/12/2019
 #    USAGE	: 	python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
@@ -408,7 +408,7 @@ def elastic_matrix():
 			print('HELP: execute by typing python3', sys.argv[0])
 			break
 		elif (sys.argv[1] == 'OUTCAR'):
-			print('Reading OUTCAR file:', sys.argv[1])
+			print('Reading Elastic Matrix from OUTCAR file:', sys.argv[1])
 			s=np.zeros((6,6))
 			c=np.zeros((6,6))
 			file = open(sys.argv[1],'r')
@@ -418,78 +418,104 @@ def elastic_matrix():
 				if "TOTAL ELASTIC MODULI (kBar)" in i:
 					ll=lines.index(i)
 			for i in range(0,6):
-				l=lines[ll+3+i]
+				l=lines[ll+3+i] # indexing a line in huge file
 				word = l.split()
 				s[i][:] = word[1:7]
 				for j in range(0,6):
 					c[i][j] = float(s[i][j])/10.0
+##########--------------------stress tensor------------------					
 			Cij=np.matrix(c)
 			print (Cij)
-##########--------------------Compliance tensor------------------------------------
+			
+##########--------------------Compliance tensor------------------
 ##########--------------------  s_{ij} = C_{ij}^{-1}
 			Sij = np.linalg.inv(Cij)
-			#-------------------Voigt bulk modulus  K_v  $(GPa)$
-			#-----------9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
 
+#----------------------------- ELASTIC PROPERTIES -----------------------------------
+
+#-------------------------------- Voigt bulk modulus  K_v  $(GPa)$---------------
+#------------------- 9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
 			Kv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0])) / 9.0
-#--------------------------------Reuss bulk modulus  K_R  $(GPa)$
+#-------------------------------- Reuss shear modulus  G_v  $(GPa)$------------------
+#------------------- 15/G_R = 4(s_{11}+s_{22}+s_{33}) - 4(s_{12} + s_{23} + s_{31}) + 3(s_{44} + s_{55} + s_{66})$
+			Gv = (4 * (Cij[0,0] + Cij[1,1] + Cij[2,2]) - 4 * (Cij[0,1] + Cij[1,2] + Cij[2,0]) + 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0
+#-------------------------------- Reuss bulk modulus  K_R  $(GPa)$----------------
 #-------------------  1/K_R = (s_{11}+s_{22}+s_{33}) + 2(s_{12} + s_{23} + s_{31})$
 			Kr = 1/((Sij[0,0] + Sij[1,1] + Sij[2,2]) + 2 * (Sij[0,1] + Sij[1,2] + Sij[2,0]))
-			Gv = (4 * (Cij[0,0] + Cij[1,1] + Cij[2,2]) - 4 * (Cij[0,1] + Cij[1,2] + Cij[2,0]) + 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0
-			## Young's: Voigt
-			Ev = (9*Kv*Gv)/(3*Kv + Gv)
+#-------------------------------- Reuss shear modulus  G_r  $(GPa)$------------------
+			Gr = 15 / (4 * (Sij[0,0] + Sij[1,1] + Sij[2,2]) - 4 * (Sij[0,1] + Sij[1,2] + Sij[2,0]) + 3 * (Sij[3,3] + Sij[4,4] + Sij[5,5]))
 		
+#------------------------------------------------------------------------------------
+
+			## Young's Modulus "E": Voigt
+			Ev = (9*Kv*Gv)/(3*Kv + Gv)				
+			## Young's: Reuss
+			Er = (9*Kr*Gr)/(3*Kr + Gr)		
+			
 			## Poisson's ratio: Voigt
-			Nu_V = (3*Kv - Ev)/(6*Kv)
-		
+			Nu_V = (3*Kv - Ev)/(6*Kv)				
+	        ## Poisson's ratio: Reuss
+			Nu_R = (3*Kr - Er)/(6*Kr)
+			
 			## P-wave modulus, M: Voigt
-			MV = Kv + (4*Gv/3.0)
+			MV = Kv + (4*Gv/3.0)	        
+	        ## P-wave modulus, M: Reuss
+			MR = Kr + (4*Gr/3.0)	
+				
+#------------------------------------------------------------------------------------
+			
+#--------------- Voigt-Reuss-Hill Approximation: average of both methods
 			Kvrh = (Kv + Kr)/2.0
-			print (Ev, Nu_V, MV, Kvrh)
+			Gvrh = (Gv + Gr)/2.0
+			Mvrh = (MV + MR)/2.0
+			Evrh = (Ev + Er)/2.0
+			Nu_vrh = (Nu_V + Nu_R)/2.0
+			KG_ratio_V = Kv/Gv
+			KG_ratio_R = Kr/Gr
+			KG_ratio_vrh = Kvrh/Gvrh			
+#--------------- Isotropic Poisson ratio $\mu 
+#--------------- $\mu = (3K_{vrh} - 2G_{vrh})/(6K_{vrh} + 2G_{vrh})$
+			mu = (3 * Kvrh - 2 * Gvrh) / (6 * Kvrh + 2 * Gvrh )
+			print("Isotropic Poisson ratio: ", mu)
+#-----------------------------------------------------------------------
+			
+#------------------------------------------------------------------------------------
+		
+			print ("\n \n                         Voigt     Reuss    Average")
+			print ("-------------------------------------------------------")
+			print ("Bulk modulus   (GPa)  %9.3f %9.3f %9.3f " % (Kv, Kr, Kvrh))
+			print ("Shear modulus  (GPa)  %9.3f %9.3f %9.3f " % (Gv, Gr, Gvrh))
+			print ("Young modulus  (GPa)  %9.3f %9.3f %9.3f " % (Ev, Er, Evrh))
+			print ("Poisson ratio         %9.3f %9.3f %9.3f " % (Nu_V, Nu_R, Nu_vrh))
+			print ("P-wave modulus  (GPa) %9.3f %9.3f %9.3f " % (MV, MR, Mvrh))
+			print ("Bulk/Shear ratio      %9.3f %9.3f %9.3f (%s) " % (KG_ratio_V, KG_ratio_R, KG_ratio_vrh,  ductile_test(KG_ratio_vrh) ))
+			print ("-------------------------------------------------------")			
 			break
 		else:
 			print ('NO file entered or wrong filename') 
-			break		
-					
+			break	
+			
+def ductile_test(ratio):
+	if(ratio > 1.75):
+		return "ductile"
+	else:
+		return "brittle"
+		
 ####
 if __name__ == "__main__":
 
 	#poscar()
 	Introduction()
-	VOL_P = main_poscar()
-	VOL_C = main_contcar()
+	#VOL_P = main_poscar()
+	#VOL_C = main_contcar()
 	print (" ----------------------------------------------------       ")
 	print (" ----------------------------------------------------       ")
 	print (" ----------------------------------------------------       ")
-	volume_diff(VOL_P, VOL_C)
-	energy()
-	#elastic_matrix()
+	#volume_diff(VOL_P, VOL_C)
+	#energy()
+	elastic_matrix()
 
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
