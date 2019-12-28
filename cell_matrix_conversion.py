@@ -7,7 +7,7 @@
 #    CODE to: 	convert Cell Matrix to Cell Parameters
 #    VERSION: 	This script runs with python3 or later
 #    FORMAT	:	POSCAR VASP5 format
-#    DATE	: 	22/12/2019
+#    DATE	: 	28/12/2019
 #    USAGE	: 	python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
@@ -24,19 +24,17 @@ from termcolor import colored
 
 '''
 ##########################---------------------------------------------------------
-#				 Reading just a POSCAR file from the command prompt
+#		1-		 Reading only POSCAR file from the command prompt in a given directory
 ##########################---------------------------------------------------------
 '''
 
 def poscar():
 	while True:
-		if (sys.argv[1] == "-h"):
-			print('HELP: execute by typing python3', sys.argv[0])
-			break
-		elif (sys.argv[1] == 'POSCAR'):
-			print('Reading a POSCAR file:', sys.argv[1])
+		a = input ("Enter POSCAR filename: \t")
+		if (a == 'POSCAR') or (a == 'poscar') or (a == 'CONTCAR') or (a == 'contcar'):	
+			print('Reading POSCAR: \n')
 			pos = []; kk = []; lattice = []; sum = 0
-			file = open(sys.argv[1],'r')
+			file = open(a,'r')
 			
 			firstline   = file.readline()
 			secondfline = file.readline()
@@ -143,9 +141,12 @@ def poscar():
 		else:
 			print ('NO file entered or wrong filename') 
 			break			
+
+'''
 #####---------------------------------------------------------
-# Looping over all directories in a current folder containing POSCARS files
+#        2-      Looping over all directories containing POSCAR & CONTCAR files
 #####--------------------------------------------------------- 
+'''
 
 def main_poscar():
 	count = 0
@@ -348,8 +349,7 @@ def main_contcar():
 	return VOL_C
 	
 	
-	
-#### math.sin fucntion takes arguments in radians ONLY
+#### math.sin function takes argument in radians ONLY
 def volume(a,b,c,alpha,beta,gamma):
 	length = np.linalg.norm(a) * np.linalg.norm(b) * np.linalg.norm(c) 
 	volume = length * ( np.sqrt(1 + 2 * math.cos(alpha) * math.cos(beta) * math.cos(gamma) - math.cos(alpha)**2 - math.cos(beta)**2 - math.cos(gamma)**2) )
@@ -370,17 +370,13 @@ def volume_diff(VOL_P, VOL_C):
 	print ("VOL Diff A^3 %18s %12s %15.15s" %("CONTCAR",  "POSCAR",  "contcar-poscar"))
 	for i in range(int(n)):
 		print ("The difference is: %12.6f %12.6f %15.8f " %(VOL_C[i], VOL_P[i], VOL_C[i] - VOL_P[i]) )
-####	
-def Introduction():
-    global message
-    message = "___| Converting Cell Matrix to Cell Parameters <<<<<< Different part of the script be run in the main program"
-    print(message)
 	
 ####
+
 def energy():
 	mypath = os.getcwd()
 	E=[]; dir_list=[]; count = 0; dir_E=[]
-	print ("               >>>>> Extracting Energies from directories  <<<<<<")
+	print ("               >>>>> Extracting Energy from directories  <<<<<<")
 	for entry in os.listdir(mypath):
 		if os.path.isdir(os.path.join(mypath, entry)):
 			dir_list.append(entry); 
@@ -399,19 +395,26 @@ def energy():
 	#print (dir_list); print (E)
 	
 	for i in range(count):
-		print (dir_list[i], "-->" , E[i] )
-		
+		print ("_______|		", dir_list[i], "-->" , E[i] )
+
+#########
+
+def print_Cij_Matrix():
+	Bij = []
+	C = "C"
+	for i in range(0,6):
+		Bij.append([])
+		for j in range(0,6):
+			Bij[i].append((C + str(i) + str(j)))
+	l = np.matrix(Bij)
+	return l
+	
 def elastic_matrix():
 	while True:
-		if (sys.argv[1] == "-h"):
-			print('HELP: execute by typing python3', sys.argv[0])
-			break
-		elif (sys.argv[1] == 'OUTCAR'):
-			print('Reading Elastic Matrix from OUTCAR file:', sys.argv[1])
 			s=np.zeros((6,6))
 			c=np.zeros((6,6))
 			
-			file = open(sys.argv[1],'r')
+			file = open("OUTCAR",'r')
 			lines = file.readlines()			
 			file.close()
 			
@@ -425,24 +428,34 @@ def elastic_matrix():
 				for j in range(0,6):
 					c[i][j] = float(s[i][j])/10.0
 					
-##########--------------------stress tensor------------------					
-			Cij=np.matrix(c)
+##########--------------------stress tensor------------------	
+				
+			Cij = np.matrix(c)
 			np.set_printoptions(precision=4, suppress=True)
 			print (Cij)
+			print(print_Cij_Matrix())
+			print ("\nEigen Values of the matrix Cij:")
+			evals = np.linalg.eigvals(Cij)
+			if evals.all() > 0:
+				print(evals)
+				print("All Eigen values are positive")
 			
 ##########--------------------Compliance tensor------------------
 ##########--------------------  s_{ij} = C_{ij}^{-1}
-			Sij = np.linalg.inv(Cij)
 
+			Sij = np.linalg.inv(Cij)
+			
 #----------------------------- ELASTIC PROPERTIES -----------------------------------
 
+			stability_test(Cij, "cubic")
+			
 #-------------------------------- Voigt bulk modulus  K_v  $(GPa)$---------------
 #------------------- 9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
 			Kv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0])) / 9.0
 #-------------------------------- Reuss shear modulus  G_v  $(GPa)$------------------
 #------------------- 15/G_R = 4(s_{11}+s_{22}+s_{33}) - 4(s_{12} + s_{23} + s_{31}) + 3(s_{44} + s_{55} + s_{66})$
 			Gv = (4 * (Cij[0,0] + Cij[1,1] + Cij[2,2]) - 4 * (Cij[0,1] + Cij[1,2] + Cij[2,0]) + 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0
-#-------------------------------- Reuss bulk modulus  K_R  $(GPa)$----------------
+#-------------------------------- Reuss bulk modulus  K_r  $(GPa)$----------------
 #-------------------  1/K_R = (s_{11}+s_{22}+s_{33}) + 2(s_{12} + s_{23} + s_{31})$
 			Kr = 1/((Sij[0,0] + Sij[1,1] + Sij[2,2]) + 2 * (Sij[0,1] + Sij[1,2] + Sij[2,0]))
 #-------------------------------- Reuss shear modulus  G_r  $(GPa)$------------------
@@ -466,7 +479,6 @@ def elastic_matrix():
 			MR = Kr + (4*Gr/3.0)	
 				
 #------------------------------------------------------------------------------------
-			
 #--------------- Voigt-Reuss-Hill Approximation: average of both methods
 			Kvrh = (Kv + Kr)/2.0
 			Gvrh = (Gv + Gr)/2.0
@@ -479,9 +491,8 @@ def elastic_matrix():
 #--------------- Isotropic Poisson ratio $\mu 
 #--------------- $\mu = (3K_{vrh} - 2G_{vrh})/(6K_{vrh} + 2G_{vrh})$
 			mu = (3 * Kvrh - 2 * Gvrh) / (6 * Kvrh + 2 * Gvrh )
-			print("Isotropic Poisson ratio: ", mu)
-#-----------------------------------------------------------------------
 			
+#-----------------------------------------------------------------------
 #------------------------------------------------------------------------------------
 		
 			print ("\n \n                         Voigt     Reuss    Average")
@@ -492,11 +503,10 @@ def elastic_matrix():
 			print ("Poisson ratio         %9.3f %9.3f %9.3f " % (Nu_V, Nu_R, Nu_vrh))
 			print ("P-wave modulus  (GPa) %9.3f %9.3f %9.3f " % (MV, MR, Mvrh))
 			print ("Bulk/Shear ratio      %9.3f %9.3f %9.3f (%s) " % (KG_ratio_V, KG_ratio_R, KG_ratio_vrh,  ductile_test(KG_ratio_vrh) ))
-			print ("-------------------------------------------------------")			
+			print ("-------------------------------------------------------")
+			print("Isotropic Poisson ratio: ", mu)			
 			break
-		else:
-			print ('NO file entered or wrong filename') 
-			break	
+	
 			
 def ductile_test(ratio):
 	if(ratio > 1.75):
@@ -504,35 +514,70 @@ def ductile_test(ratio):
 	else:
 		return "brittle"
 		
-# An excercise to print Cij matrix in apythonic way
+	
+def stability_test(matrix, crystaltype):
+ c = np.copy(matrix)
 
-def print_Cij_Matrix():
-	Bij = []
-	C = "C"
-	for i in range(0,6):
-		Bij.append([])
-		for j in range(0,6):
-			Bij[i].append((C + str(i) + str(j)))
-	l = np.matrix(Bij)		
-	print (l)		
+ if(crystaltype =="cubic"):
+   print ("Cubic crystal system \n")
+   print ("Born stability criteria for the stability of cubic system are : \ [Ref- Mouhat and Coudert, PRB 90, 224104 (2014)]  \n")
+   print ("(i) C11 - C12 > 0;    (ii) C11 + 2C12 > 0;   (iii) C44 > 0 \n ")
+
+   ## check (i)   keep in mind list starts with 0, so c11 is stored as c00
+   if(c[0][0] - c[0][1] > 0.0):
+      print ("Condition (i) satisfied.")
+   else:
+      print ("Condition (i) NOT satisfied.")
+
+   if(c[0][0] + 2*c[0][1] > 0.0):
+      print ("Condition (ii) satified.")
+   else:
+      print ("Condition (ii) NOT satisfied.")
+
+   if(c[3][3] > 0.0):
+      print ("Condition (iii) satified.")
+   else:
+      print ("Condition (iii) NOT satisfied.")
+
+def Introduction():
+	global message
+	message = "              ____| Python script to process various properties |____"
+	print(message)
 	
 ####
 if __name__ == "__main__":
 
-	#poscar()
 	Introduction()
-	#VOL_P = main_poscar()
-	#VOL_C = main_contcar()
-	print (" ----------------------------------------------------       ")
-	print (" ----------------------------------------------------       ")
-	print (" ----------------------------------------------------       ")
-	#volume_diff(VOL_P, VOL_C)
-	#energy()
-	elastic_matrix()
-	print_Cij_Matrix()
+	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
+	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
+	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
+	print ('HELP: execute by typing python3 sys.argv[0]')
 
-
+	print ("***************** Following are the options ... ")
+	print ("(1) To process only POSCAR file (Convert Lattice Matrix to Lattice parameter)")
+	print ("(2) To process only ENERGY from directories")
+	print ("(3) To process only CELL VOLUME DIFFERENCE from directories by comparing with final CONTCAR file")
+	print ("(4) To process ELASTIC CONSTANTS from OUTCAR file")
 	
+	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
+	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
+	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
+
+	option = input("Enter the option as listed above: ")
+	option = int(option)
+	if (option == 1):
+		poscar()
+	elif (option == 2):
+		energy()
+	elif (option == 3):
+		VOL_P = main_poscar()
+		VOL_C = main_contcar()
+		volume_diff(VOL_P, VOL_C)		
+	elif (option == 4):
+		print("Reading OUTCAR. OUTCAR should be in the same directory from which this script is run ")
+		elastic_matrix()
+	else:
+		print ("INVALID OPTION")
 	
 	
 	
