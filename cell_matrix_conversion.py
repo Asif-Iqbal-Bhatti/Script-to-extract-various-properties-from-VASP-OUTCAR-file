@@ -7,7 +7,7 @@
 #    CODE to: 	convert Cell Matrix to Cell Parameters
 #    VERSION: 	This script runs with python3 or later
 #    FORMAT	:	POSCAR VASP5 format
-#    DATE	: 	28/12/2019
+#    DATE	: 	22/12/2019
 #    USAGE	: 	python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
@@ -373,8 +373,7 @@ def volume_diff(VOL_P, VOL_C):
 ####	
 def Introduction():
     global message
-    message = "     >>>>> Converting Cell Matrix to Cell Parameters <<<<<< \
-					Different part of the script be run in the main program "
+    message = "___| Converting Cell Matrix to Cell Parameters <<<<<< Different part of the script be run in the main program"
     print(message)
 	
 ####
@@ -411,9 +410,11 @@ def elastic_matrix():
 			print('Reading Elastic Matrix from OUTCAR file:', sys.argv[1])
 			s=np.zeros((6,6))
 			c=np.zeros((6,6))
+			
 			file = open(sys.argv[1],'r')
 			lines = file.readlines()			
-			file.close()	
+			file.close()
+			
 			for i in lines:
 				if "TOTAL ELASTIC MODULI (kBar)" in i:
 					ll=lines.index(i)
@@ -423,8 +424,10 @@ def elastic_matrix():
 				s[i][:] = word[1:7]
 				for j in range(0,6):
 					c[i][j] = float(s[i][j])/10.0
+					
 ##########--------------------stress tensor------------------					
 			Cij=np.matrix(c)
+			np.set_printoptions(precision=4, suppress=True)
 			print (Cij)
 			
 ##########--------------------Compliance tensor------------------
@@ -501,6 +504,18 @@ def ductile_test(ratio):
 	else:
 		return "brittle"
 		
+# An excercise to print Cij matrix in apythonic way
+
+def print_Cij_Matrix():
+	Bij = []
+	C = "C"
+	for i in range(0,6):
+		Bij.append([])
+		for j in range(0,6):
+			Bij[i].append((C + str(i) + str(j)))
+	l = np.matrix(Bij)		
+	print (l)		
+	
 ####
 if __name__ == "__main__":
 
@@ -514,8 +529,33 @@ if __name__ == "__main__":
 	#volume_diff(VOL_P, VOL_C)
 	#energy()
 	elastic_matrix()
+	print_Cij_Matrix()
 
 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
