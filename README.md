@@ -1,4 +1,4 @@
-# Python3 Script to convert Cell Matrix to Cell parameter
+# Python3 Script to convert Cell Matrix to Cell parameter 💫
 **_Convert VASP5 POSCAR Lattice Matrix to Lattice parameter and other properties_**
 
 If you have performed a number of calculations and you want to obtain the lattice parameters and volume from each directory then run this script in a directory and it will loop over all the directory and find POSCAR files and output the lattice parameters and volume, moreover it also scans the CONTCAR files and compute the volume and lattice parameters, and on the screen it prints the volume difference upon structure minimization. 
