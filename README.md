@@ -32,6 +32,7 @@ def print_Cij_Matrix():
 	print (l)
  ```
 
-
+ref: [exciting](http://exciting-code.org/nitrogen-energy-vs-strain-calculations)
+ref: [materialsproject](https://wiki.materialsproject.org/Elasticity_calculations)
 
 
