@@ -28,6 +28,9 @@ from termcolor import colored
 ##########################---------------------------------------------------------
 '''
 
+ang2atomic = 1.889725988579 # 1 A = 1.889725988579 [a.u]
+ang2bohr   = 6.7483330371   # 1 A^3 = 6.7483330371 [a.u]^3
+
 def poscar():
 	while True:
 		a = input ("Enter POSCAR filename: \t")
@@ -136,7 +139,7 @@ def poscar():
 			print ('||a||=%2f, \u03B1= %2f' %(np.linalg.norm(a), alpha))
 			print ('||b||=%2f  \u03B2= %2f' %(np.linalg.norm(b), beta))
 			print ('||c||=%2f  \u03B3= %2f' %(np.linalg.norm(c), gamma))
-			print ('Vol= %3.5f' %(volume(a,b,c,math.radians(alpha),math.radians(beta),math.radians(gamma) )))			
+			print ('Vol= %4.8f A^3; %4.8f [a.u]^3' %(volume(a,b,c,math.radians(alpha),math.radians(beta),math.radians(gamma) )))			
 			break
 		else:
 			print ('NO file entered or wrong filename') 
@@ -353,7 +356,8 @@ def main_contcar():
 def volume(a,b,c,alpha,beta,gamma):
 	length = np.linalg.norm(a) * np.linalg.norm(b) * np.linalg.norm(c) 
 	volume = length * ( np.sqrt(1 + 2 * math.cos(alpha) * math.cos(beta) * math.cos(gamma) - math.cos(alpha)**2 - math.cos(beta)**2 - math.cos(gamma)**2) )
-	return volume
+	vol_au = volume * ang2bohr
+	return volume, vol_au
 
 #### Ordering of angles does matter
 def lattice_angles(a,b,c):
@@ -451,15 +455,15 @@ def elastic_matrix():
 			
 #-------------------------------- Voigt bulk modulus  K_v  $(GPa)$---------------
 #------------------- 9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
-			Kv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0])) / 9.0
+			Kv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0]))/9.0; print (Kv)
 #-------------------------------- Reuss shear modulus  G_v  $(GPa)$------------------
 #------------------- 15/G_R = 4(s_{11}+s_{22}+s_{33}) - 4(s_{12} + s_{23} + s_{31}) + 3(s_{44} + s_{55} + s_{66})$
-			Gv = (4 * (Cij[0,0] + Cij[1,1] + Cij[2,2]) - 4 * (Cij[0,1] + Cij[1,2] + Cij[2,0]) + 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0
+			Gv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) - (Cij[0,1] + Cij[1,2] + Cij[2,0]) + 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0; print (Gv)
 #-------------------------------- Reuss bulk modulus  K_r  $(GPa)$----------------
 #-------------------  1/K_R = (s_{11}+s_{22}+s_{33}) + 2(s_{12} + s_{23} + s_{31})$
-			Kr = 1/((Sij[0,0] + Sij[1,1] + Sij[2,2]) + 2 * (Sij[0,1] + Sij[1,2] + Sij[2,0]))
+			Kr = 1/((Sij[0,0] + Sij[1,1] + Sij[2,2]) + 2 * (Sij[0,1] + Sij[1,2] + Sij[2,0]) )
 #-------------------------------- Reuss shear modulus  G_r  $(GPa)$------------------
-			Gr = 15 / (4 * (Sij[0,0] + Sij[1,1] + Sij[2,2]) - 4 * (Sij[0,1] + Sij[1,2] + Sij[2,0]) + 3 * (Sij[3,3] + Sij[4,4] + Sij[5,5]))
+			Gr = 15/(4 * (Sij[0,0] + Sij[1,1] + Sij[2,2]) - 4 * (Sij[0,1] + Sij[1,2] + Sij[2,0]) + 3 * (Sij[3,3] + Sij[4,4] + Sij[5,5]))
 		
 #------------------------------------------------------------------------------------
 
@@ -502,7 +506,7 @@ def elastic_matrix():
 			print ("Young modulus  (GPa)  %9.3f %9.3f %9.3f " % (Ev, Er, Evrh))
 			print ("Poisson ratio         %9.3f %9.3f %9.3f " % (Nu_V, Nu_R, Nu_vrh))
 			print ("P-wave modulus  (GPa) %9.3f %9.3f %9.3f " % (MV, MR, Mvrh))
-			print ("Bulk/Shear ratio      %9.3f %9.3f %9.3f (%s) " % (KG_ratio_V, KG_ratio_R, KG_ratio_vrh,  ductile_test(KG_ratio_vrh) ))
+			print ("Bulk/Shear ratio      %9.3f %9.3f %9.3f (%s) " %(KG_ratio_V, KG_ratio_R, KG_ratio_vrh,  ductile_test(KG_ratio_vrh) ))
 			print ("-------------------------------------------------------")
 			print("Isotropic Poisson ratio: ", mu)			
 			break
@@ -516,28 +520,28 @@ def ductile_test(ratio):
 		
 	
 def stability_test(matrix, crystaltype):
- c = np.copy(matrix)
+	c = np.copy(matrix)
 
- if(crystaltype =="cubic"):
-   print ("Cubic crystal system \n")
-   print ("Born stability criteria for the stability of cubic system are : \ [Ref- Mouhat and Coudert, PRB 90, 224104 (2014)]  \n")
-   print ("(i) C11 - C12 > 0;    (ii) C11 + 2C12 > 0;   (iii) C44 > 0 \n ")
-
-   ## check (i)   keep in mind list starts with 0, so c11 is stored as c00
-   if(c[0][0] - c[0][1] > 0.0):
-      print ("Condition (i) satisfied.")
-   else:
-      print ("Condition (i) NOT satisfied.")
-
-   if(c[0][0] + 2*c[0][1] > 0.0):
-      print ("Condition (ii) satified.")
-   else:
-      print ("Condition (ii) NOT satisfied.")
-
-   if(c[3][3] > 0.0):
-      print ("Condition (iii) satified.")
-   else:
-      print ("Condition (iii) NOT satisfied.")
+	if(crystaltype =="cubic"):
+		print ("Cubic crystal system \n")
+		print ("Born stability criteria for the stability of cubic system are : \ [Ref- Mouhat and Coudert, PRB 90, 224104 (2014)]  \n")
+		print ("(i) C11 - C12 > 0;    (ii) C11 + 2C12 > 0;   (iii) C44 > 0 \n ")
+		
+		## check (i)   keep in mind list starts with 0, so c11 is stored as c00
+	if(c[0][0] - c[0][1] > 0.0):
+		print ("Condition (i) satisfied.")
+	else:
+		print ("Condition (i) NOT satisfied.")
+	
+	if(c[0][0] + 2*c[0][1] > 0.0):
+		print ("Condition (ii) satified.")
+	else:
+		print ("Condition (ii) NOT satisfied.")
+	
+	if(c[3][3] > 0.0):
+		print ("Condition (iii) satified.")
+	else:
+		print ("Condition (iii) NOT satisfied.")
 
 def Introduction():
 	global message
