@@ -425,6 +425,9 @@ def elastic_matrix():
 			for i in lines:
 				if "TOTAL ELASTIC MODULI (kBar)" in i:
 					ll=lines.index(i)
+				if "LATTYP" in i:
+					crystaltype=str(i.split()[3])
+			print (crystaltype)			
 			for i in range(0,6):
 				l=lines[ll+3+i] # indexing a line in huge file
 				word = l.split()
@@ -451,14 +454,14 @@ def elastic_matrix():
 			
 #----------------------------- ELASTIC PROPERTIES -----------------------------------
 
-			stability_test(Cij, "cubic")
+			stability_test(Cij, crystaltype)
 			
 #-------------------------------- Voigt bulk modulus  K_v  $(GPa)$---------------
 #------------------- 9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
-			Kv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0]))/9.0; print (Kv)
+			Kv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0]))/9.0
 #-------------------------------- Reuss shear modulus  G_v  $(GPa)$------------------
 #------------------- 15/G_R = 4(s_{11}+s_{22}+s_{33}) - 4(s_{12} + s_{23} + s_{31}) + 3(s_{44} + s_{55} + s_{66})$
-			Gv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) - (Cij[0,1] + Cij[1,2] + Cij[2,0]) + 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0; print (Gv)
+			Gv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) - (Cij[0,1] + Cij[1,2] + Cij[2,0]) + 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0
 #-------------------------------- Reuss bulk modulus  K_r  $(GPa)$----------------
 #-------------------  1/K_R = (s_{11}+s_{22}+s_{33}) + 2(s_{12} + s_{23} + s_{31})$
 			Kr = 1/((Sij[0,0] + Sij[1,1] + Sij[2,2]) + 2 * (Sij[0,1] + Sij[1,2] + Sij[2,0]) )
@@ -543,6 +546,28 @@ def stability_test(matrix, crystaltype):
 	else:
 		print ("Condition (iii) NOT satisfied.")
 
+	if(crystaltype =="hexagonal"):
+		print ("Hexagonal crystal system \n")
+		print ("Born stability criteria for the stability of hexagonal system are \: [Ref- Mouhat and Coudert, PRB 90, 224104 (2014)]  \n")
+		print ("(i) C11 - C12 > 0;    (ii) 2*C13^2 < C33(C11 + C12);   (iii) C44 > 0 \n ")
+		
+		## check (i)   keep in mind list starts with 0, so c11 is stored as c00
+		if(c[0][0] - c[0][1] > 0.0):
+			print ("Condition (i) satisfied.")
+		else:
+			print ("Condition (i) NOT satisfied.")
+		
+		if(2*(c[0][2]*c[0][2]) < c[2][2]*(c[0][0] + c[0][1])):
+			print ("Condition (ii) satified.")
+		else:
+			print ("Condition (ii) NOT satisfied.")
+		
+		if(c[3][3] > 0.0):
+			print ("Condition (iii) satified.")
+		else:
+			print ("Condition (iii) NOT satisfied.")
+
+
 def Introduction():
 	global message
 	message = "              ____| Python script to process various properties |____"
@@ -582,29 +607,3 @@ if __name__ == "__main__":
 		elastic_matrix()
 	else:
 		print ("INVALID OPTION")
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
