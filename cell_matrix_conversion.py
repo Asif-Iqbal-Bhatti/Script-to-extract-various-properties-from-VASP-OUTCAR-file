@@ -21,6 +21,9 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 from termcolor import colored
+import multiprocessing as mp
+
+
 
 '''
 ##########################---------------------------------------------------------
@@ -34,7 +37,7 @@ ang2bohr   = 6.7483330371   # 1 A^3 = 6.7483330371 [a.u]^3
 def poscar():
 	while True:
 		a = input ("Enter POSCAR filename: \t")
-		if (a == 'POSCAR') or (a == 'poscar') or (a == 'CONTCAR') or (a == 'contcar'):	
+		if (a == 'POSCAR') or (a == 'CONTCAR'):	
 			print('Reading POSCAR: \n')
 			pos = []; kk = []; lattice = []; sum = 0
 			file = open(a,'r')
@@ -147,7 +150,7 @@ def poscar():
 
 '''
 #####---------------------------------------------------------
-#        2-      Looping over all directories containing POSCAR & CONTCAR files
+#        2- Looping over all directories containing POSCAR & CONTCAR files
 #####--------------------------------------------------------- 
 '''
 
@@ -419,7 +422,7 @@ def elastic_matrix():
 			c=np.zeros((6,6))
 			
 			file = open("OUTCAR",'r')
-			lines = file.readlines()			
+			lines = file.readlines()		
 			file.close()
 			
 			for i in lines:
@@ -427,7 +430,8 @@ def elastic_matrix():
 					ll=lines.index(i)
 				if "LATTYP" in i:
 					crystaltype=str(i.split()[3])
-			print (crystaltype)			
+			print ("DETECTED CRYSTAL FROM OUTCAR:", crystaltype)			
+			print (" ")			
 			for i in range(0,6):
 				l=lines[ll+3+i] # indexing a line in huge file
 				word = l.split()
@@ -577,12 +581,13 @@ def Introduction():
 if __name__ == "__main__":
 
 	Introduction()
+	print("Number of processors Detected: ", mp.cpu_count())    
 	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
 	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
 	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
-	print ('HELP: execute by typing python3 sys.argv[0]')
+	print ('>>> USAGE: execute by typing python3 sys.argv[0]')
 
-	print ("***************** Following are the options ... ")
+	print ("***************************** Following are the options ... ")
 	print ("(1) To process only POSCAR file (Convert Lattice Matrix to Lattice parameter)")
 	print ("(2) To process only ENERGY from directories")
 	print ("(3) To process only CELL VOLUME DIFFERENCE from directories by comparing with final CONTCAR file")
@@ -604,6 +609,14 @@ if __name__ == "__main__":
 		volume_diff(VOL_P, VOL_C)		
 	elif (option == 4):
 		print("Reading OUTCAR. OUTCAR should be in the same directory from which this script is run ")
+		pool = mp.Pool(mp.cpu_count())
 		elastic_matrix()
+		pool.close()
 	else:
 		print ("INVALID OPTION")
+	
+	
+	
+	
+	
+	
