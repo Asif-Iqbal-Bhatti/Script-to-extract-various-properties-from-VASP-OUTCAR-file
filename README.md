@@ -13,8 +13,9 @@ For VASP structural minimization these tag should be used: IBRION = 2; ISIF = 3;
 dir1
 dir2
 dir3
-...
-Python3 cellMatrix_cellParameters.py
+Python Main_file.py
+POSCAR
+OUTCAR
 ```
 
 ```
