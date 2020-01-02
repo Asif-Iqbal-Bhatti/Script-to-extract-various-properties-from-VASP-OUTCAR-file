@@ -365,7 +365,7 @@ def volume(a,b,c,alpha,beta,gamma):
 	vol_au = volume * ang2bohr
 	return volume, vol_au
 
-#### Ordering of angles does matter
+#### Ordering of returning variables angles does matter
 def lattice_angles(a,b,c):
 	### gamma = Cos-1( (a.b)/||a||.||b|| )
 	### alpha = Cos-1( (b.c)/||b||.||c|| )
@@ -383,7 +383,7 @@ def volume_diff(VOL_P, VOL_C):
 	
 '''
 #####---------------------------------------------------------
-#            3- ELASTIC PROPERTIES from VASP OUTCAR file
+#            3- ELASTIC PROPERTIES from VASP OUTCAR STRESS APPROACH file
 #####--------------------------------------------------------- 
 '''
 
@@ -397,7 +397,7 @@ def print_Cij_Matrix():
 	l = np.matrix(Bij)
 	return l
 	
-def elastic_matrix():
+def elastic_matrix_VASP_STRESS():
 	while True:
 			s=np.zeros((6,6))
 			c=np.zeros((6,6))
@@ -498,7 +498,6 @@ def elastic_matrix():
 			print ("-------------------------------------------------------")
 			print("Isotropic Poisson ratio: ", mu)			
 			break
-	
 			
 def ductile_test(ratio):
 	if(ratio > 1.75):
@@ -506,7 +505,6 @@ def ductile_test(ratio):
 	else:
 		return "brittle"
 		
-	
 def stability_test(matrix, crystaltype):
 	c = np.copy(matrix)
 
@@ -581,7 +579,7 @@ def born_stability_criterion():
 
 '''
 #####---------------------------------------------------------
-#            4- EXTRACT ENERGIES from VASP OUTCAR file
+#            4- EXTRACT ENERGY & VOLUME from VASP OUTCAR file
 #####--------------------------------------------------------- 
 '''
 
@@ -624,35 +622,35 @@ if __name__ == "__main__":
 	Introduction()
 	print("Number of processors Detected: ", mp.cpu_count())
     
-	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
-	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
-	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
+	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
+	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
+	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
 	print ('>>> USAGE: execute by typing python3 sys.argv[0]')
 
-	print ("***************************** Following are the options ... ")
+	print ("****>>>> Following are the options ... ")
 	print ("(1) To execute only POSCAR file (Convert Lattice Matrix to Lattice parameter)")
-	print ("(2) To extract ENERGY from directories")
-	print ("(3) To execute POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
+	print ("(2) To execute POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
+	print ("(3) To extract ENERGY from directories")
 	print ("(4) To execute ELASTIC CONSTANTS from OUTCAR file")
 	
-	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
-	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
-	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
+	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
+	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
+	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
 
 	option = input("Enter the option as listed above: ")
 	option = int(option)
 	if (option == 1):
 		poscar()
 	elif (option == 2):
-		energy()
-	elif (option == 3):
 		VOL_P = main_poscar()
 		VOL_C = main_contcar()
 		volume_diff(VOL_P, VOL_C)		
+	elif (option == 3):
+		energy()
 	elif (option == 4):
 		print("Reading OUTCAR. OUTCAR should be in the same directory from which this script is run ")		
 		pool = mp.Pool(mp.cpu_count())
-		elastic_matrix()
+		elastic_matrix_VASP_STRESS()
 		pool.close()
 	else:
 		print ("INVALID OPTION")
