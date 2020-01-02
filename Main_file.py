@@ -36,10 +36,10 @@ print (colored(' ----------------------------------------------------       ','r
 print ('>>> USAGE: execute by typing python3 sys.argv[0]')
 
 print ("***************************** Following are the options ... ")
-print ("(1) To process only POSCAR file (Convert Lattice Matrix to Lattice parameter)")
-print ("(2) To process only ENERGY from directories")
-print ("(3) To process only CELL VOLUME DIFFERENCE from directories by comparing with final CONTCAR file")
-print ("(4) To process ELASTIC CONSTANTS from OUTCAR file")
+print ("(1) To execute only POSCAR file (Convert Lattice Matrix to Lattice parameter)")
+print ("(2) To extract ENERGY from directories")
+print ("(3) To execute POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
+print ("(4) To execute ELASTIC CONSTANTS from OUTCAR file")
 
 print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
 print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
