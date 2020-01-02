@@ -382,7 +382,7 @@ def volume_diff(VOL_P, VOL_C):
 
 def energy():
 	mypath = os.getcwd()
-	E=[]; dir_list=[]; count = 0; dir_E=[]
+	E=[]; dir_list=[]; count = 0; dir_E=[]; vol_cell=[]
 	print ("               >>>>> Extracting Energy from directories  <<<<<<")
 	for entry in os.listdir(mypath):
 		if os.path.isdir(os.path.join(mypath, entry)):
@@ -391,18 +391,23 @@ def energy():
 			for file in os.listdir(entry):
 				if file == "OUTCAR":
 					filepath = os.path.join(entry, file)
+					
 					f = open(filepath,'r')
 					lines = f.readlines()
 					f.close()
+					
 					for i in lines:
 						if "  free  energy   TOTEN  =" in i:
 							m=float(i.split()[4])
+						if "  volume of cell :"	in i:
+							v=float(i.split()[4])
+					vol_cell.append(v)		
 					E.append(m)
 					count+=1
-	#print (dir_list); print (E)
-	
+	#print (dir_list); print (E); print (vol_cell)
+	print ("Directory name:  %6.6s %9.6s %14s " % ("Folder", "Energy", "Vol of cell" ))
 	for i in range(count):
-		print ("_______|		", dir_list[i], "-->" , E[i] )
+		print ("Folder name:  %9.6s %12.6f %12.4f " % (dir_list[i], E[i], vol_cell[i] ))
 
 #########
 
@@ -576,22 +581,43 @@ def Introduction():
 	global message
 	message = "              ____| Python script to process various properties |____"
 	print(message)
-	
+
+def born_stability_criterion():
+	print ("Born stability criteria for the stability of following systems \n")
+	print ("Cubic crystal system.... \n")	
+	print ("(i) C11 - C12 > 0;    (ii) C11 + 2C12 > 0;   (iii) C44 > 0 \n ")
+	print ("Hexagonal crystal system.... \n")	
+	print ("(i) C11 - C12 > 0;    (ii) 2*C13^2 < C33(C11 + C12);   (iii) C44 > 0 \n ")
+	print ("Tetragonal crystal system.... \n")	
+	print ("(i) C11 - C12 > 0;    (ii) 2*C13^2 < C33(C11 + C12);   (iii) C44 > 0;   (iv) C66 > 0;    (v) 2C16^2 < C66*(C11-C12) \n ")
+	print ("rhombohedral crystal system.... \n")	
+	print ("(i) C11 - C12 > 0;    (ii) C13^2 < (1/2)*C33(C11 + C12);   (iii) C14^2 < (1/2)*C44*(C11-C12) = C44*C66;   (iv)  C44 > 0; \n ")
+	print ("orthorhombic crystal system.... \n")	
+	print ("(i) C11 > 0;   (ii) C11*C22 > C12^2;   (iii) C11*C22*C33 + 2C12*C13*C23 - C11*C23^2 - C22*C13^2 - C33*C12^2 > 0;   (iv)  C44 > 0;   (v)  C55 > 0 ;   (vi)  C66 > 0 \n")
+	print ("Monoclinic crystal system.... \n")
+	print ("[Ref- Mouhat and Coudert, PRB 90, 224104 (2014), and Wu et al. PRB 76, 054115 (2007)]  \n")
+	print ("(i) C11 > 0;  (ii)  C22 > 0; (iii)  C33 > 0; (iv)  C44 > 0;   (v)  C55 > 0 ;   (vi)  C66 > 0  ")
+	print ("(vii) [C11 + C22 + C33 + 2*(C12 + C13 + C23)] > 0;    (viii)  C33*C55 - C35^2 > 0;   (ix)  C44*C66 - C46^2 > 0;   (x) C22 + C33 - 2*C23  > 0 ")
+	print ("(xi) C22*(C33*C55 - C35^2) + 2*C23*C25*C35 - (C23^2)*C55 - (C25^2)*C33   > 0  ")
+	print ("(xii)  2*[C15*C25*(C33*C12 - C13*C23) + C15*C35*(C22*C13 - C12*C23) + C25*C35*(C11*C23 - C12*C13)] - [C15*C15*(C22*C33 - C23^2) + C25*C25*(C11*C33 - C13^2) + C35*C35*(C11*C22 - C12^2)] + C55*g > 0  ")
+	print (" where, g = [C11*C22*C33 - C11*C23*C23 - C22*C13*C13 - C33*C12*C12 + 2*C12*C13*C23 ] "	)	
+
 ####
 if __name__ == "__main__":
 
 	Introduction()
-	print("Number of processors Detected: ", mp.cpu_count())    
+	print("Number of processors Detected: ", mp.cpu_count())
+    
 	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
 	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
 	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
 	print ('>>> USAGE: execute by typing python3 sys.argv[0]')
 
 	print ("***************************** Following are the options ... ")
-	print ("(1) To process only POSCAR file (Convert Lattice Matrix to Lattice parameter)")
-	print ("(2) To process only ENERGY from directories")
-	print ("(3) To process only CELL VOLUME DIFFERENCE from directories by comparing with final CONTCAR file")
-	print ("(4) To process ELASTIC CONSTANTS from OUTCAR file")
+	print ("(1) To execute only POSCAR file (Convert Lattice Matrix to Lattice parameter)")
+	print ("(2) To extract ENERGY from directories")
+	print ("(3) To execute POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
+	print ("(4) To execute ELASTIC CONSTANTS from OUTCAR file")
 	
 	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
 	print (colored(' ----------------------------------------------------       ','red'), end = '\n', flush=True)
@@ -608,7 +634,7 @@ if __name__ == "__main__":
 		VOL_C = main_contcar()
 		volume_diff(VOL_P, VOL_C)		
 	elif (option == 4):
-		print("Reading OUTCAR. OUTCAR should be in the same directory from which this script is run ")
+		print("Reading OUTCAR. OUTCAR should be in the same directory from which this script is run ")		
 		pool = mp.Pool(mp.cpu_count())
 		elastic_matrix()
 		pool.close()
