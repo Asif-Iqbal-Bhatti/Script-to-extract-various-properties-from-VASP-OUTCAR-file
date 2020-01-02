@@ -4,7 +4,10 @@
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 #    Credit	: 	Asif Iqbal BHATTI
-#    CODE to: 	convert Cell Matrix to Cell Parameters
+#    CODE to: 	OBTAIN Elastic properties form OUTCAR files,
+#               compare POSCAR and CONTCAR volume deformation
+#               upon minimization, and extract energy from a number
+#				of directories.  
 #    VERSION: 	This script runs with python3 or later
 #    FORMAT	:	POSCAR VASP5 format
 #    DATE	: 	28/12/2019
@@ -172,7 +175,7 @@ def main_poscar():
 					#print (f.read())
 					#f.close()	
 					fo = open(filepath, 'r')
-					ofile=open('out.dat','a+')
+					ofile=open('out_POSCARS.dat','a+')
 					print (colored('>>>>>>>>  Name of the file: ','red'), fo.name, end = '\n', flush=True)
 					ofile.write (fo.name + '\n')
 					ofile.write ("")
@@ -276,7 +279,7 @@ def main_contcar():
 					filepath = os.path.join(entry, file)
 					fo = open(filepath, 'r')
 					
-					ofile=open('out_contcar.dat','a+')
+					ofile=open('out_CONTCARS.dat','a+')
 					
 					print (colored('>>>>>>>>  Name of the file: ','yellow'), fo.name, end = '\n', flush=True)
 					ofile.write (fo.name + '\n')
@@ -378,38 +381,11 @@ def volume_diff(VOL_P, VOL_C):
 	for i in range(int(n)):
 		print ("The difference is: %12.6f %12.6f %15.8f " %(VOL_C[i], VOL_P[i], VOL_C[i] - VOL_P[i]) )
 	
-####
-
-def energy():
-	mypath = os.getcwd()
-	E=[]; dir_list=[]; count = 0; dir_E=[]; vol_cell=[]
-	print ("               >>>>> Extracting Energy from directories  <<<<<<")
-	for entry in os.listdir(mypath):
-		if os.path.isdir(os.path.join(mypath, entry)):
-			dir_list.append(entry); 
-			
-			for file in os.listdir(entry):
-				if file == "OUTCAR":
-					filepath = os.path.join(entry, file)
-					
-					f = open(filepath,'r')
-					lines = f.readlines()
-					f.close()
-					
-					for i in lines:
-						if "  free  energy   TOTEN  =" in i:
-							m=float(i.split()[4])
-						if "  volume of cell :"	in i:
-							v=float(i.split()[4])
-					vol_cell.append(v)		
-					E.append(m)
-					count+=1
-	#print (dir_list); print (E); print (vol_cell)
-	print ("Directory name:  %6.6s %9.6s %14s " % ("Folder", "Energy", "Vol of cell" ))
-	for i in range(count):
-		print ("Folder name:  %9.6s %12.6f %12.4f " % (dir_list[i], E[i], vol_cell[i] ))
-
-#########
+'''
+#####---------------------------------------------------------
+#            3- ELASTIC PROPERTIES from VASP OUTCAR file
+#####--------------------------------------------------------- 
+'''
 
 def print_Cij_Matrix():
 	Bij = []
@@ -602,7 +578,47 @@ def born_stability_criterion():
 	print ("(xii)  2*[C15*C25*(C33*C12 - C13*C23) + C15*C35*(C22*C13 - C12*C23) + C25*C35*(C11*C23 - C12*C13)] - [C15*C15*(C22*C33 - C23^2) + C25*C25*(C11*C33 - C13^2) + C35*C35*(C11*C22 - C12^2)] + C55*g > 0  ")
 	print (" where, g = [C11*C22*C33 - C11*C23*C23 - C22*C13*C13 - C33*C12*C12 + 2*C12*C13*C23 ] "	)	
 
-####
+
+'''
+#####---------------------------------------------------------
+#            4- EXTRACT ENERGIES from VASP OUTCAR file
+#####--------------------------------------------------------- 
+'''
+
+def energy():
+	mypath = os.getcwd()
+	E=[]; dir_list=[]; count = 0; dir_E=[]; vol_cell=[]
+	print ("               >>>>> Extracting Energy from directories  <<<<<<")
+	for entry in os.listdir(mypath):
+		if os.path.isdir(os.path.join(mypath, entry)):
+			dir_list.append(entry); 
+			
+			for file in os.listdir(entry):
+				if file == "OUTCAR":
+					filepath = os.path.join(entry, file)
+					
+					f = open(filepath,'r')
+					lines = f.readlines()
+					f.close()
+					
+					for i in lines:
+						if "  free  energy   TOTEN  =" in i:
+							m=float(i.split()[4])
+						if "  volume of cell :"	in i:
+							v=float(i.split()[4])
+					vol_cell.append(v)		
+					E.append(m)
+					count+=1
+	#print (dir_list); print (E); print (vol_cell)
+	print ("Directory name:  %6.6s %9.6s %14s " % ("Folder", "Energy", "Vol of cell" ))
+	for i in range(count):
+		print ("Folder name:  %9.6s %12.6f %12.4f " % (dir_list[i], E[i], vol_cell[i] ))
+	#rc = subprocess.Popen(['bash', 'extract_energy.sh'])
+	
+	
+#########
+#########
+
 if __name__ == "__main__":
 
 	Introduction()
