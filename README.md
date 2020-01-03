@@ -42,4 +42,5 @@ def print_Cij_Matrix():
 ref: [exciting](http://exciting-code.org/nitrogen-energy-vs-strain-calculations)
 ref: [materialsproject](https://wiki.materialsproject.org/Elasticity_calculations)
 
+[![licensebuttons by-nd](https://licensebuttons.net/l/by-nd/3.0/88x31.png)](https://creativecommons.org/licenses/by-nd/4.0)
 
