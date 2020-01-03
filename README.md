@@ -1,5 +1,5 @@
-# Python3 or later: Code to extract Elastic properties, Energy, lattice parameter from VASP output files 💫
-**_Extract Elastic properties, Energy, lattice parameter from VASP output files_**
+# Code to extract Elastic properties, Energy, lattice parameter from VASP output files 💫
+**_Python3 or later: Extract Elastic properties, Energy, lattice parameter from VASP output files_**
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 ![pypi](https://img.shields.io/pypi/v/pybadges.svg)
