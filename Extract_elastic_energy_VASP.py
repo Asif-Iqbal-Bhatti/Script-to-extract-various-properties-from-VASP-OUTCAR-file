@@ -25,7 +25,7 @@ from os.path import isfile, join
 from pathlib import Path
 from termcolor import colored
 import multiprocessing as mp
-
+from colorama import Fore, Back
 
 
 '''
@@ -551,10 +551,6 @@ def stability_test(matrix, crystaltype):
 			print ("Condition (iii) NOT satisfied.")
 
 
-def Introduction():
-	global message
-	message = "              ____| Python script to process various properties |____"
-	print(message)
 
 def born_stability_criterion():
 	print ("Born stability criteria for the stability of following systems \n")
@@ -608,30 +604,35 @@ def energy():
 					E.append(m)
 					count+=1
 	#print (dir_list); print (E); print (vol_cell)
-	print ("Directory name:  %6.6s %9.6s %14s " % ("Folder", "Energy", "Vol of cell" ))
+	print ("Directory name:  %11.6s %10s %14s " % ("Folder", "Energy (eV)", "Vol of cell" ))
 	for i in range(count):
-		print ("Folder name:  %9.6s %12.6f %12.4f " % (dir_list[i], E[i], vol_cell[i] ))
+		print ("Folder name:  %12.10s %14.6f %14.4f " % (dir_list[i], E[i], vol_cell[i] ))
 	#rc = subprocess.Popen(['bash', 'extract_energy.sh'])
 	
 	
 #########
+def Introduction():
+	global message
+	message = "              ____| Python script to process various properties |____"
+	print(message)
 #########
 
 if __name__ == "__main__":
 
 	Introduction()
 	print("Number of processors Detected: ", mp.cpu_count())
+	print(Back.MAGENTA + '          NB: POSCAR should be in VASP 5 format', end = '\n', flush=True)
     
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
 	print ('>>> USAGE: execute by typing python3 sys.argv[0]')
 
-	print ("****>>>> Following are the options ... ")
+	print ("**** Following are the options ... ")
 	print ("(1) To execute only POSCAR file (Convert Lattice Matrix to Lattice parameter)")
 	print ("(2) To execute POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
 	print ("(3) To extract ENERGY from directories")
-	print ("(4) To execute ELASTIC CONSTANTS from OUTCAR file")
+	print ("(4) To extract ELASTIC CONSTANTS from OUTCAR file (IBRION=6,ISIF=3)")
 	
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
