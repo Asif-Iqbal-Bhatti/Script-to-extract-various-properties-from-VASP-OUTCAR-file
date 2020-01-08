@@ -579,14 +579,22 @@ def born_stability_criterion():
 #####--------------------------------------------------------- 
 '''
 
-def energy():
+def energy_vs_volume():
+	import fnmatch
 	mypath = os.getcwd()
-	os.system("rm energy-vs-volume")
+	os.system("rm energy-vs-volume energy-vs-strain")
 	eV2Hartree=0.036749309
 	Ang32Bohr3=6.74833304162
-	E=[]; dir_list=[]; count = 0; dir_E=[]; vol_cell=[]
+	E=[]; dir_list=[]; count = 0; dir_E=[]; vol_cell=[]; strain=[]; a=[]
 	print ("               >>>>> Extracting Energy from directories  <<<<<<")
 	for entry in os.listdir(mypath):
+		if fnmatch.fnmatchcase(entry,'strain-*'):
+			f = open(entry,'r')
+			lines = f.readline()
+			a.append( float(lines) )
+			f.close()
+			if os.path.isfile(os.path.join(mypath, entry)):
+				strain.append(entry)		
 		if os.path.isdir(os.path.join(mypath, entry)):
 			dir_list.append(entry); 
 			
@@ -607,18 +615,26 @@ def energy():
 					E.append(m)
 					count+=1	
 	#print (dir_list); print (E); print (vol_cell)
-	print ("Directory name:  %11.6s %10s %14s " % ("Folder", "Energy (eV)", "Vol of cell" ))
-	for i in range(count):
-		print ("Folder name:  %12.10s %14.6f %14.4f " % (dir_list[i], E[i], vol_cell[i] ))
-	#rc = subprocess.Popen(['bash', 'extract_energy.sh'])
+	print ("Directory :%10.6s %14s %16s %25.20s " % ("Folder", "Energy (eV)", "Vol_of_cell", "strain_deformation" ))
 	
+	for i in range(count):
+		print ("Folder name: %10.10s %16.8f %16.8f %16.12s %14.4f" % (dir_list[i], E[i], vol_cell[i], strain[i], a[i] ))
+	#rc = subprocess.Popen(['bash', 'extract_energy.sh'])
+		
 	print (colored('ENERGIES & VOLUMES ARE WRITTEN IN ATOMIC UNITS TO A FILE <energy-vs-volume>','yellow'), end = '\n', flush=True)
 	print (colored('IT WILL BE READ BY ELASTIC SCRIPTS FOR POSTPROCESSING eV-->Ha; A^3-->Bohr^3','yellow'), end = '\n', flush=True)	
+	
 	file = open("energy-vs-volume",'w')
 	for i in range(count):
-		file.write ("%14.6f %14.6f\n" %(vol_cell[i] * Ang32Bohr3, E[i] * eV2Hartree))	
+		file.write ("%10.6f %14.6f\n" %(vol_cell[i] * Ang32Bohr3, E[i] * eV2Hartree))	
 	file.close()
-	
+
+	file = open("energy-vs-strain",'w')
+	for i in range(count):
+		file.write ("%10.6f %14.6f\n" %(a[i], E[i] * eV2Hartree))	
+	file.close()
+
+					
 #########
 def Introduction():
 	global message
@@ -642,6 +658,7 @@ if __name__ == "__main__":
 	print ("(2) To execute POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
 	print ("(3) To extract ENERGY from directories")
 	print ("(4) To extract ELASTIC CONSTANTS from OUTCAR file (IBRION=6,ISIF=3)")
+
 	
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
@@ -656,7 +673,7 @@ if __name__ == "__main__":
 		VOL_C = main_contcar()
 		volume_diff(VOL_P, VOL_C)		
 	elif (option == 3):
-		energy()
+		energy_vs_volume()
 	elif (option == 4):
 		print("Reading OUTCAR. OUTCAR should be in the same directory from which this script is run ")		
 		pool = mp.Pool(mp.cpu_count())
