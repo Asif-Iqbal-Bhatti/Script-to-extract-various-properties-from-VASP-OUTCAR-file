@@ -581,6 +581,9 @@ def born_stability_criterion():
 
 def energy():
 	mypath = os.getcwd()
+	os.system("rm energy-vs-volume")
+	eV2Hartree=0.036749309
+	Ang32Bohr3=6.74833304162
 	E=[]; dir_list=[]; count = 0; dir_E=[]; vol_cell=[]
 	print ("               >>>>> Extracting Energy from directories  <<<<<<")
 	for entry in os.listdir(mypath):
@@ -602,13 +605,19 @@ def energy():
 							v=float(i.split()[4])
 					vol_cell.append(v)		
 					E.append(m)
-					count+=1
+					count+=1	
 	#print (dir_list); print (E); print (vol_cell)
 	print ("Directory name:  %11.6s %10s %14s " % ("Folder", "Energy (eV)", "Vol of cell" ))
 	for i in range(count):
 		print ("Folder name:  %12.10s %14.6f %14.4f " % (dir_list[i], E[i], vol_cell[i] ))
 	#rc = subprocess.Popen(['bash', 'extract_energy.sh'])
 	
+	print (colored('ENERGIES & VOLUMES ARE WRITTEN IN ATOMIC UNITS TO A FILE <energy-vs-volume>','yellow'), end = '\n', flush=True)
+	print (colored('IT WILL BE READ BY ELASTIC SCRIPTS FOR POSTPROCESSING eV-->Ha; A^3-->Bohr^3','yellow'), end = '\n', flush=True)	
+	file = open("energy-vs-volume",'w')
+	for i in range(count):
+		file.write ("%14.6f %14.6f\n" %(vol_cell[i] * Ang32Bohr3, E[i] * eV2Hartree))	
+	file.close()
 	
 #########
 def Introduction():
