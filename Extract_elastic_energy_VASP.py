@@ -25,8 +25,10 @@ from os.path import isfile, join
 from pathlib import Path
 from termcolor import colored
 import multiprocessing as mp
-from colorama import Fore, Back, Style
+from colorama import Fore, Back, Style, init
 from   pylab import *
+init(autoreset=True)
+
 
 '''
 ##########################---------------------------------------------------------
@@ -583,16 +585,18 @@ def energy_vs_volume():
 	os.system("rm energy-vs-volume energy-vs-strain")
 	eV2Hartree=0.036749309
 	Ang32Bohr3=6.74833304162
-	E=[]; dir_list=[]; count = 0; dir_E=[]; vol_cell=[]; strain=[]; a=[]
+	
+	E=[]; dir_list=[]; count = 0; dir_E=[];
+	vol_cell=[]; strain_file=[]; strain_value=[] # strain_value is deformation
 	print ("               >>>>> Extracting Energy from directories  <<<<<<")
 	for entry in os.listdir(mypath):
 		if fnmatch.fnmatchcase(entry,'strain-*'):
 			f = open(entry,'r')
-			lines = f.readline()
-			a.append( float(lines) )
+			lines = f.readline()  #Read  first line only
+			strain_value.append( float(lines) )
 			f.close()
 			if os.path.isfile(os.path.join(mypath, entry)):
-				strain.append(entry)		
+				strain_file.append(entry)		
 		if os.path.isdir(os.path.join(mypath, entry)):
 			dir_list.append(entry); 
 			
@@ -613,10 +617,16 @@ def energy_vs_volume():
 					E.append(m)
 					count+=1	
 	#print (dir_list); print (E); print (vol_cell)
-	print ("Directory :%10.6s %14s %16s %25.20s " % ("Folder", "Energy (eV)", "Vol_of_cell", "strain_deformation" ))
-	
-	for i in range(count):
-		print ("Folder name: %10.10s %16.8f %16.8f %16.12s %14.4f" % (dir_list[i], E[i], vol_cell[i], strain[i], a[i] ))
+	print ("Directory :%10.6s %14s %18s %25.20s " % ("Folder", "Energy(eV)", "Vol_of_cell(A^3)", "strain_deformation" ))
+		
+	for i in range(math.floor(count/2)):
+		print ("Folder name: %10.10s %16.8f %16.8f %16.12s %14.4f" %(dir_list[i], E[i], vol_cell[i], strain_file[i], strain_value[i] ))
+	if (bool(math.floor(count/2))):
+		i = math.floor(count/2)
+		print(Back.GREEN + 'Folder name: %10.10s %16.8f %16.8f %16.12s %14.4f <--Ref' % (dir_list[i], E[i], vol_cell[i], strain_file[i], strain_value[i] ))		
+		print(Style.RESET_ALL, end="")
+	for i in range(math.ceil(count/2), count, 1):
+		print ("Folder name: %10.10s %16.8f %16.8f %16.12s %14.4f" %(dir_list[i], E[i], vol_cell[i], strain_file[i], strain_value[i] ))		
 	#rc = subprocess.Popen(['bash', 'extract_energy.sh'])
 		
 	print (colored('ENERGIES & VOLUMES ARE WRITTEN IN ATOMIC UNITS TO A FILE <energy-vs-volume>','yellow'), end = '\n', flush=True)
@@ -624,12 +634,12 @@ def energy_vs_volume():
 	
 	file = open("energy-vs-volume",'w')
 	for i in range(count):
-		file.write ("%12.6f %14.6f\n" %(vol_cell[i] * Ang32Bohr3, E[i] * eV2Hartree))	
+		file.write ("%14.6f %14.6f\n" %(vol_cell[i] * Ang32Bohr3, E[i] * eV2Hartree))	
 	file.close()
 
 	file = open("energy-vs-strain",'w')
 	for i in range(count):
-		file.write ("%12.6f %14.6f\n" %(a[i], E[i] * eV2Hartree))	
+		file.write ("%12.6f %14.6f\n" %(strain_value[i], E[i] * eV2Hartree))	
 	file.close()
 
 '''
@@ -661,7 +671,7 @@ def fitting_energy_vs_volume_curve():
 		line = line.strip()
 		if len(line) == 0: break
 		energy.append(float(line.split()[1]))
-		volume.append(float(line.split()[0]))	
+		volume.append(float(line.split()[0]))
 	volume,energy=sortvolume(volume,energy)
 
 	print ("===============================")
@@ -688,13 +698,17 @@ def fitting_energy_vs_volume_curve():
 	if ( scheck == "3" ): isym = 3 ; factor=4 ; slabel = "(fcc)"
 	print ("Verification lattice symmetry code      >>>> %d " %(isym) )
 #-------------------------------------------------------------------------------
+	print ('%s' %('-'*105) )
 	print ('%20.25s %29.30s %21.30s %11.12s %18.30s' %("Opt_vol Bohr^3 (Ang^3)", "Lattice_const Bohr (A)", "Bulk_modulus [GPa]", "Log(chi)", "Polynomial_order"))
+	print ('%s' %('-'*105) )
 	for order_of_fit in range(2, 11): #order of polynomial fitting
 		if order_of_fit % 2 == 0: 
 			order_of_fit = int(order_of_fit)
 			fitr = np.polyfit(volume,energy,order_of_fit)
 			curv = np.poly1d(fitr)
+			oned = np.poly1d(np.polyder(fitr,1)) #
 			bulk = np.poly1d(np.polyder(fitr,2))
+			bpri = np.poly1d(np.polyder(fitr,3)) #
 			vmin = np.roots(np.polyder(fitr))
 			dmin=[]
 			for i in range(len(vmin)):
@@ -703,17 +717,16 @@ def fitting_energy_vs_volume_curve():
 						if(bulk(vmin[i]) > 0): dmin.append(vmin[i].real)
 			
 			xvol = np.linspace(volume[0],volume[-1],100)
+			if (len(dmin) > 1): print ("WARNING: Multiple minima are found!\n")
+			if (len(dmin) == 0): print ("WARNING: No minimum in the given xrange!\n")
 			
 			chi = 0
 			for i in range(len(energy)): 
 				chi=chi+(energy[i]-curv(volume[i]))**2
 			chi=math.sqrt(chi)/len(energy)
-#-------------------------------------------------------------------------------	
-			if (len(dmin) > 1): 
-				print ("WARNING: Multiple minima are found!\n")
-				print ("##############################################\n")
-			
+#-------------------------------------------------------------------------------			
 			for i in range(len(dmin)):
+				x0=dmin[len(dmin)-1-i]
 				v0=dmin[len(dmin)-1-i]
 				a0=(factor*v0)**(0.33333333333)
 				b0=bulk(v0)*v0*unitconv
@@ -722,9 +735,7 @@ def fitting_energy_vs_volume_curve():
 					print("%12.6f (%11.6f) %12.6f (%9.6f) %17.6f %13.2f %10d\n" %(v0, v0*bohr32ang3, a0, a0*bohr_radius, b0, math.log10(chi), order_of_fit), end="") 				
 				else: 
 					print("%12.6f(%12.6f) %12.6f(%12.6f) %17.6f %13.2f %10d\n" %(v0, v0*bohr32ang3, a0, a0*bohr_radius, b0, math.log10(chi), order_of_fit), end="")
-							
-			if ( len(dmin) == 0): print ("WARNING: No minimum in the given xrange!\n")
-		
+	print ('%s' %('-'*105) )
 #-------------------------------------------------------------------------------
 
 	xlabel = u'Volume [Bohr\u00B3]'; ylabel = r'Energy [Ha]'
@@ -804,12 +815,12 @@ if __name__ == "__main__":
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
 	print ('>>> USAGE: execute by typing python3 sys.argv[0]')
 
-	print ("**** Following are the options ... ")
+	print ("**** Following are the options: ")
 	print ("(1) To execute only POSCAR file (Convert Lattice Matrix to Lattice parameter)")
 	print ("(2) To execute POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
 	print ("(3) To extract ENERGY from directories")
 	print ("(4) To extract ELASTIC CONSTANTS from OUTCAR file (IBRION=6,ISIF=3)")
-	print ("(5) Fitting energy vs volume curve")
+	print ("(5) To Fit energy vs volume curve to extract Ealstic Moduli: B0")
 
 	
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
