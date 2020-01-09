@@ -646,8 +646,8 @@ def fitting_energy_vs_volume_curve():
 	import matplotlib.style
 	
 	bohr_radius     = 0.529177
-	bohr32ang3 		= 0.14818474347
-	joule2hartree   = 4.3597482
+	bohr32ang3		= 0.14818474347
+	joule2hartree	= 4.3597482
 	joule2rydberg   = joule2hartree/2.
 	unitconv        = joule2hartree/bohr_radius**3*10.**3
 	
@@ -688,7 +688,8 @@ def fitting_energy_vs_volume_curve():
 	if ( scheck == "3" ): isym = 3 ; factor=4 ; slabel = "(fcc)"
 	print ("Verification lattice symmetry code      >>>> %d " %(isym) )
 #-------------------------------------------------------------------------------
-	for order_of_fit in range(2, 11):
+	print ('%20.25s %29.30s %21.30s %11.12s %18.30s' %("Opt_vol Bohr^3 (Ang^3)", "Lattice_const Bohr (A)", "Bulk_modulus [GPa]", "Log(chi)", "Polynomial_order"))
+	for order_of_fit in range(2, 11): #order of polynomial fitting
 		if order_of_fit % 2 == 0: 
 			order_of_fit = int(order_of_fit)
 			fitr = np.polyfit(volume,energy,order_of_fit)
@@ -707,10 +708,7 @@ def fitting_energy_vs_volume_curve():
 			for i in range(len(energy)): 
 				chi=chi+(energy[i]-curv(volume[i]))**2
 			chi=math.sqrt(chi)/len(energy)
-#-------------------------------------------------------------------------------
-			print ("##############################################\n")
-			print(Back.YELLOW + "FITTING with polynomial of order: %4d\n" %(order_of_fit), end=" ") 
-			print(Style.RESET_ALL)			
+#-------------------------------------------------------------------------------	
 			if (len(dmin) > 1): 
 				print ("WARNING: Multiple minima are found!\n")
 				print ("##############################################\n")
@@ -719,15 +717,14 @@ def fitting_energy_vs_volume_curve():
 				v0=dmin[len(dmin)-1-i]
 				a0=(factor*v0)**(0.33333333333)
 				b0=bulk(v0)*v0*unitconv
-				print ('Optimal volume   = %17.6f %17.6f '%(v0, v0*bohr32ang3), '[Bohr^3, Ang^3]')
-				if (isym > 0): print ('Lattice constant = %5s %12.6f %12.6f' %(slabel,a0, a0*bohr_radius), '[Bohr, Angstrom]')
-				print ('Bulk modulus     =  %17.6f' %(b0), '[GPa]')
-				print
-				print ('Log(chi)         = %13.2f' %(math.log10(chi)) )
-				print
-				
+				#if (isym > 0): print ('Lattice constant = %5s %12.6f %12.6f' %(slabel,a0, a0*bohr_radius), '[Bohr, Angstrom]')	
+				if (isym > 0): 
+					print("%12.6f (%11.6f) %12.6f (%9.6f) %17.6f %13.2f %10d\n" %(v0, v0*bohr32ang3, a0, a0*bohr_radius, b0, math.log10(chi), order_of_fit), end="") 				
+				else: 
+					print("%12.6f(%12.6f) %12.6f(%12.6f) %17.6f %13.2f %10d\n" %(v0, v0*bohr32ang3, a0, a0*bohr_radius, b0, math.log10(chi), order_of_fit), end="")
+							
 			if ( len(dmin) == 0): print ("WARNING: No minimum in the given xrange!\n")
-			print ("##############################################\n")			
+		
 #-------------------------------------------------------------------------------
 
 	xlabel = u'Volume [Bohr\u00B3]'; ylabel = r'Energy [Ha]'
