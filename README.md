@@ -12,7 +12,7 @@ For Elastic constants this gives an indication how much the cell has deformed an
 
 ```
 **USAGE** : Just run the Main_file.py it will call all the modules
-The code has been given in one script and in modules. 
+The code has been given in one script (**Extract_elastic_energy_VASP.py**) and in modules. 
 The module form is much easier to handle than one long complex code.
 ~/dir/ -->
 dir1
