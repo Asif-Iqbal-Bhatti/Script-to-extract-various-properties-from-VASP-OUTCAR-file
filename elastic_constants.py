@@ -9,7 +9,7 @@ from pathlib import Path
 ang2atomic = 1.889725988579 # 1 A = 1.889725988579 [a.u]
 ang2bohr   = 6.7483330371   # 1 A^3 = 6.7483330371 [a.u]^3
 
-def print_Cij_Matrix():
+def print_Cij_Matrix(): ###EXERCISE
 	Bij = []
 	C = "C"
 	for i in range(0,6):
@@ -18,28 +18,8 @@ def print_Cij_Matrix():
 			Bij[i].append((C + str(i) + str(j)))
 	l = np.matrix(Bij)
 	return l
-
-def born_stability_criterion():
-	print ("Born stability criteria for the stability of following systems \n")
-	print ("Cubic crystal system.... \n")	
-	print ("(i) C11 - C12 > 0;    (ii) C11 + 2C12 > 0;   (iii) C44 > 0 \n ")
-	print ("Hexagonal crystal system.... \n")	
-	print ("(i) C11 - C12 > 0;    (ii) 2*C13^2 < C33(C11 + C12);   (iii) C44 > 0 \n ")
-	print ("Tetragonal crystal system.... \n")	
-	print ("(i) C11 - C12 > 0;    (ii) 2*C13^2 < C33(C11 + C12);   (iii) C44 > 0;   (iv) C66 > 0;    (v) 2C16^2 < C66*(C11-C12) \n ")
-	print ("rhombohedral crystal system.... \n")	
-	print ("(i) C11 - C12 > 0;    (ii) C13^2 < (1/2)*C33(C11 + C12);   (iii) C14^2 < (1/2)*C44*(C11-C12) = C44*C66;   (iv)  C44 > 0; \n ")
-	print ("orthorhombic crystal system.... \n")	
-	print ("(i) C11 > 0;   (ii) C11*C22 > C12^2;   (iii) C11*C22*C33 + 2C12*C13*C23 - C11*C23^2 - C22*C13^2 - C33*C12^2 > 0;   (iv)  C44 > 0;   (v)  C55 > 0 ;   (vi)  C66 > 0 \n")
-	print ("Monoclinic crystal system.... \n")
-	print ("[Ref- Mouhat and Coudert, PRB 90, 224104 (2014), and Wu et al. PRB 76, 054115 (2007)]  \n")
-	print ("(i) C11 > 0;  (ii)  C22 > 0; (iii)  C33 > 0; (iv)  C44 > 0;   (v)  C55 > 0 ;   (vi)  C66 > 0  ")
-	print ("(vii) [C11 + C22 + C33 + 2*(C12 + C13 + C23)] > 0;    (viii)  C33*C55 - C35^2 > 0;   (ix)  C44*C66 - C46^2 > 0;   (x) C22 + C33 - 2*C23  > 0 ")
-	print ("(xi) C22*(C33*C55 - C35^2) + 2*C23*C25*C35 - (C23^2)*C55 - (C25^2)*C33   > 0  ")
-	print ("(xii)  2*[C15*C25*(C33*C12 - C13*C23) + C15*C35*(C22*C13 - C12*C23) + C25*C35*(C11*C23 - C12*C13)] - [C15*C15*(C22*C33 - C23^2) + C25*C25*(C11*C33 - C13^2) + C35*C35*(C11*C22 - C12^2)] + C55*g > 0  ")
-	print (" where, g = [C11*C22*C33 - C11*C23*C23 - C22*C13*C13 - C33*C12*C12 + 2*C12*C13*C23 ] "	)	
 	
-def elastic_matrix():
+def elastic_matrix_VASP_STRESS():
 	while True:
 			s=np.zeros((6,6))
 			c=np.zeros((6,6))
@@ -66,12 +46,6 @@ def elastic_matrix():
 				
 			Cij = np.matrix(c)
 			np.set_printoptions(precision=4, suppress=True)
-			
-			Cij[:,[3,4]] = Cij[:,[4,3]]  #SWAP COLUMNS
-			Cij[:,[4,5]] = Cij[:,[5,4]]
-			Cij[[3,4],:] = Cij[[4,3],:]  #SWAP ROWS
-			Cij[[4,5],:] = Cij[[5,4],:]
-					
 			print (Cij)
 			print(print_Cij_Matrix())
 			print ("\nEigen Values of the matrix Cij:")
@@ -146,7 +120,6 @@ def elastic_matrix():
 			print ("-------------------------------------------------------")
 			print("Isotropic Poisson ratio: ", mu)			
 			break
-	
 			
 def ductile_test(ratio):
 	if(ratio > 1.75):
@@ -154,7 +127,6 @@ def ductile_test(ratio):
 	else:
 		return "brittle"
 		
-	
 def stability_test(matrix, crystaltype):
 	c = np.copy(matrix)
 
@@ -199,3 +171,24 @@ def stability_test(matrix, crystaltype):
 			print ("Condition (iii) satified.")
 		else:
 			print ("Condition (iii) NOT satisfied.")
+
+def born_stability_criterion():
+	print ("Born stability criteria for the stability of following systems \n")
+	print ("Cubic crystal system.... \n")	
+	print ("(i) C11 - C12 > 0;    (ii) C11 + 2C12 > 0;   (iii) C44 > 0 \n ")
+	print ("Hexagonal crystal system.... \n")	
+	print ("(i) C11 - C12 > 0;    (ii) 2*C13^2 < C33(C11 + C12);   (iii) C44 > 0 \n ")
+	print ("Tetragonal crystal system.... \n")	
+	print ("(i) C11 - C12 > 0;    (ii) 2*C13^2 < C33(C11 + C12);   (iii) C44 > 0;   (iv) C66 > 0;    (v) 2C16^2 < C66*(C11-C12) \n ")
+	print ("rhombohedral crystal system.... \n")	
+	print ("(i) C11 - C12 > 0;    (ii) C13^2 < (1/2)*C33(C11 + C12);   (iii) C14^2 < (1/2)*C44*(C11-C12) = C44*C66;   (iv)  C44 > 0; \n ")
+	print ("orthorhombic crystal system.... \n")	
+	print ("(i) C11 > 0;   (ii) C11*C22 > C12^2;   (iii) C11*C22*C33 + 2C12*C13*C23 - C11*C23^2 - C22*C13^2 - C33*C12^2 > 0;   (iv)  C44 > 0;   (v)  C55 > 0 ;   (vi)  C66 > 0 \n")
+	print ("Monoclinic crystal system.... \n")
+	print ("[Ref- Mouhat and Coudert, PRB 90, 224104 (2014), and Wu et al. PRB 76, 054115 (2007)]  \n")
+	print ("(i) C11 > 0;  (ii)  C22 > 0; (iii)  C33 > 0; (iv)  C44 > 0;   (v)  C55 > 0 ;   (vi)  C66 > 0  ")
+	print ("(vii) [C11 + C22 + C33 + 2*(C12 + C13 + C23)] > 0;    (viii)  C33*C55 - C35^2 > 0;   (ix)  C44*C66 - C46^2 > 0;   (x) C22 + C33 - 2*C23  > 0 ")
+	print ("(xi) C22*(C33*C55 - C35^2) + 2*C23*C25*C35 - (C23^2)*C55 - (C25^2)*C33   > 0  ")
+	print ("(xii)  2*[C15*C25*(C33*C12 - C13*C23) + C15*C35*(C22*C13 - C12*C23) + C25*C35*(C11*C23 - C12*C13)] - [C15*C15*(C22*C33 - C23^2) + C25*C25*(C11*C33 - C13^2) + C35*C35*(C11*C22 - C12^2)] + C55*g > 0  ")
+	print (" where, g = [C11*C22*C33 - C11*C23*C23 - C22*C13*C13 - C33*C12*C12 + 2*C12*C13*C23 ] "	)	
+
