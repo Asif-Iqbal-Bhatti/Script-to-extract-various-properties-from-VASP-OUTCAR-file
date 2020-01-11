@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 '''
 #####---------------------------------------------------------
@@ -148,6 +148,9 @@ def poscar():
 
 
 def poscar_VASP42VASP5():
+	if not os.path.exists('POSCAR' or 'POTCAR'):
+		print (' ERROR: POSCAR does not exist here.')
+		sys.exit(0)	
 	file1 = open("POSCAR",'r')
 	line1 = file1.readlines()		
 	file1.close()
