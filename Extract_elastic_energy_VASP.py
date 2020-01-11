@@ -16,7 +16,7 @@
 #####---------------------------------------------------------
 '''
 
-import os, sys, spglib
+import os, sys, spglib, scipy
 import math, glob
 import numpy as np
 import subprocess
@@ -148,7 +148,7 @@ def poscar():
 
 
 def poscar_VASP42VASP5():
-	if not os.path.exists('POSCAR' or 'POTCAR'):
+	if not os.path.exists('POSCAR' and 'POTCAR'):
 		print (' ERROR: POSCAR does not exist here.')
 		sys.exit(0)	
 	file1 = open("POSCAR",'r')
@@ -159,10 +159,12 @@ def poscar_VASP42VASP5():
 	line2 = file2.readlines()		
 	file2.close()
 	
+	atom_number=[]
 	for i in line1:
 		if ("Direct" or "direct" or "d" or "D") in i:
 			PP=line1.index(i)
-	#print (lines[PP+1:], end="\n")
+	atom_number = line1[5].split()
+	print(atom_number)
 	
 	elementtype=[]; count=0
 	for i in line2:
@@ -180,10 +182,18 @@ def poscar_VASP42VASP5():
 		test.write("\t" +  j)
 	test.write("\n" )
 	
-	for i in range(len(line1)-PP+1):
-		test.write(line1[PP-1+i] )
+	for j in atom_number:
+		test.write("\t" +  j )
+	test.write("\n" )
+	
+	test.write("Selective dynamics")
+	test.write("\n" )
+	
+	for i in range(len(line1)-PP):
+		test.write(line1[PP+i] )
 		
 	test.close()
+	
 	print ("                        File is converted: POSCAR_W")
 
 '''
@@ -428,12 +438,11 @@ def volume_diff(VOL_P, VOL_C):
 '''
 
 def print_Cij_Matrix(): ###EXERCISE
-	Bij = []
-	C = "C"
-	for i in range(0,6):
+	Bij = []; C = "C"
+	for i in range(0, 6, 1):
 		Bij.append([])
-		for j in range(0,6):
-			Bij[i].append((C + str(i) + str(j)))
+		for j in range(1, 7, 1):
+			Bij[i].append((C + str(i+1) + str(j)))
 	l = np.matrix(Bij)
 	return l
 	
