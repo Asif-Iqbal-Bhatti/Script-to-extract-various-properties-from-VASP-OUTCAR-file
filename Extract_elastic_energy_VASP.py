@@ -61,7 +61,7 @@ def poscar():
 	print ("Coordtype:", (Coordtype), end = '\n')	
 	
 ########################---------------------------------------------------------
-	print ("*************-------------------# of Atoms--------------------")
+	print ("****-------------------# of Atoms--------------------")
 	nat = numberofatoms.split()
 	nat = [int(i) for i in nat]
 	print (nat)
@@ -71,7 +71,7 @@ def poscar():
 	print ("Number of atoms:", (numberofatoms), end = '\n')
 ########################---------------------------------------------------------
 
-	#print ("*************---------------Atomic positions------------------")				
+	#print ("****---------------Atomic positions------------------")				
 	for x in range(int(numberofatoms)):
 		coord = file.readline().split()
 		coord = [float(i) for i in coord]
@@ -98,13 +98,30 @@ def poscar():
 	print ("//////---------------Lattice vectors-----------------")				
 	lattice = np.array([a] + [b] + [c])
 	print (lattice)
-	print (" ")
+	determinant = np.linalg.det(lattice)
 	print ("//////---------------Space group-----------------")		
 	print (" ")
-	numbers = [1,1]			
+	print ( space_group_analyse(lattice, pos) )
+	print (" ")
+	print ("/////--------------------------------------------")
+	print ('a=', a)
+	print ('b=', b)
+	print ('c=', c)
+	gamma = math.degrees(math.acos(np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))))
+	alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
+	beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
+	print ("ratio c/a = %2f" %(np.linalg.norm(c) / np.linalg.norm(a) ))
+	print ("#####------------------------------------------------")
+	print ('||a||=%2f, \u03B1= %2f' %(np.linalg.norm(a), alpha))
+	print ('||b||=%2f  \u03B2= %2f' %(np.linalg.norm(b), beta))
+	print ('||c||=%2f  \u03B3= %2f' %(np.linalg.norm(c), gamma))
+	print ('Vol= %4.8f A^3; %4.8f [a.u]^3' %(volume(a,b,c,math.radians(alpha),math.radians(beta),math.radians(gamma) )))			
+
+def space_group_analyse(lattice, pos):
+	numbers = [1,2]			
 	cell = (lattice, pos, numbers)
-	print(spglib.get_spacegroup(cell, symprec=1e-5))
-	#print(spglib.get_symmetry(cell, symprec=1e-5))
+	sp=spglib.get_spacegroup(cell, symprec=1e-5)
+	symm=spglib.get_symmetry(cell, symprec=1e-5)
 	#print(spglib.niggli_reduce(lattice, eps=1e-5))
 	
 	#mesh = [8, 8, 8]
@@ -129,23 +146,7 @@ def poscar():
 	## Irreducible k-points
 	#print("Number of ir-kpoints: %d" % len(np.unique(mapping)))
 	#print((grid[np.unique(mapping)] + [0.5, 0.5, 0.5]) / mesh)
-
-	print (" ")
-	print ("/////------------------------------------------------")
-	
-	print ('a=', a)
-	print ('b=', b)
-	print ('c=', c)
-	gamma = math.degrees(math.acos(np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))))
-	alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
-	beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
-	print ("ratio c/a = %2f" %(np.linalg.norm(c) / np.linalg.norm(a) ))
-	print ("#####------------------------------------------------")
-	print ('||a||=%2f, \u03B1= %2f' %(np.linalg.norm(a), alpha))
-	print ('||b||=%2f  \u03B2= %2f' %(np.linalg.norm(b), beta))
-	print ('||c||=%2f  \u03B3= %2f' %(np.linalg.norm(c), gamma))
-	print ('Vol= %4.8f A^3; %4.8f [a.u]^3' %(volume(a,b,c,math.radians(alpha),math.radians(beta),math.radians(gamma) )))			
-
+	return sp, symm
 
 def poscar_VASP42VASP5():
 	if not os.path.exists('POSCAR' and 'POTCAR'):
@@ -203,11 +204,15 @@ def poscar_VASP42VASP5():
 '''
 
 def main_poscar():
+
 	count = 0
-	os.system("rm out.dat")
+	os.system("rm out_POSCARS.dat")
 	VOL_P = []; pos = []; kk = []; lattice = [];
 	mypath = os.getcwd()
-	#print (mypath)
+	print ("-"*100)	
+	print (Back.YELLOW + "{:15s} {:15s} {:15.6s} {:15.6s} {:15.6s} {:15.15s}".format("Directory", "# of atoms", "||a||", \
+	"||b||", "||c||", "VOL_POS[A^3]"),end="\n" )	
+	print ("-"*100)	
 
 	for entry in os.listdir(mypath):
 		if os.path.isdir(os.path.join(mypath, entry)):
@@ -220,8 +225,10 @@ def main_poscar():
 					#print (f.read())
 					#f.close()	
 					fo = open(filepath, 'r')
-					ofile=open('out_POSCARS.dat','a+')
-					print (colored('>>>>>>>>  Name of the file: ','red'), fo.name, end = '\n', flush=True)
+					ofile=open('out_POSCARS.dat','a')
+					
+					#print (colored('>>>>>>>>  Name of the file: ','red'), fo.name, end = '\n', flush=True)
+					
 					ofile.write (fo.name + '\n')
 					ofile.write ("")
 					firstline   = fo.readline()
@@ -245,24 +252,23 @@ def main_poscar():
 					Coordtype=fo.readline()
 
 ##########################---------------------------------------------------------
-					print ("**********-------------------# of Atoms--------------------")
+					#print ("**********-------------------# of Atoms--------------------")
 					
 					nat = numberofatoms.split()
 					nat = [int(i) for i in nat]
-					print (nat)
 					for i in nat:
 						sum = sum + i
 					numberofatoms = sum
-					print ("Number of atoms:", (numberofatoms), end = '\n')
+					#print ("{} :: Number of atoms: {}".format(nat, numberofatoms) )
 ##########################---------------------------------------------------------					
-					print ("//////---------------Atomic positions-----------------")
-					print ("Coordtype:", (Coordtype), end = '')						
+					#print ("-----------------------Atomic positions-----------------")
+					#print ("Coordtype:", (Coordtype), end = '')						
 					for x in range(int(numberofatoms)):
 						coord = fo.readline().split()
 						coord = [float(i) for i in coord]
 						pos = pos + [coord]
 					pos = np.array(pos)
-					print (pos)
+					#print (pos)
 					
 					ofile.write ("\n")			
 					fo.close()
@@ -274,18 +280,14 @@ def main_poscar():
 					Latvec3=Latvec3.split()
 					
 ##########################---------------------------------------------------------
-					for ai in Latvec1:
-						a.append(float(ai))
-					for bi in Latvec2:
-						b.append(float(bi))
-					for ci in Latvec3:
-						c.append(float(ci))	
-					print ("////------------------------------------------------")
-					print ('a=', a)
+					for ai in Latvec1: a.append(float(ai))
+					for bi in Latvec2: b.append(float(bi))
+					for ci in Latvec3: c.append(float(ci))	
+					#print ('a=', a)
 					ofile.write ("'a=' {}\n".format(a))
-					print ('b=', b)
+					#print ('b=', b)
 					ofile.write ("'b=' {}\n".format(b))
-					print ('c=', c)
+					#print ('c=', c)
 					ofile.write ("'c=' {}\n".format(c))		
 					
 ##########################---------------------------------------------------------
@@ -293,29 +295,38 @@ def main_poscar():
 					alpha, beta, gamma = lattice_angles(a,b,c)
 					VOL_POS = np.dot(a, np.cross(b,c))	
 					VOL_P.append(VOL_POS)	
-					
-					print ('\u03B1=', alpha, '\u03B2=', beta, '\u03B3=', gamma)
+
 					ofile.write ("'\u03B1=' {} '\u03B2=' {} '\u03B3=' {}\n".format(alpha,beta,gamma))
-					print ("#####------------------------------------------------")
-					print ('||a||=', np.linalg.norm(a))
 					ofile.write ("'||a||=' {}\n".format(np.linalg.norm(a)))
-					print ('||b||=', np.linalg.norm(b))
-					ofile.write ("'||b||=' {}\n".format(np.linalg.norm(b)))			
-					print ('||c||=', np.linalg.norm(c)) 
-					ofile.write ("'||c||=' {}\n".format(np.linalg.norm(c)))
-					print ('Vol= %3.5f' %(VOL_POS))						
+					ofile.write ("'||b||=' {}\n".format(np.linalg.norm(b)))		
+					ofile.write ("'||c||=' {}\n".format(np.linalg.norm(c)))					
+					#print ("#####------------------------------------------------")
+					
+					#print ("a={} \t ||a||={:10.6f}".format(a, np.linalg.norm(a)) )
+					#print ("b={} \t ||b||={:10.6f}".format(b, np.linalg.norm(b)) )
+					#print ("c={} \t ||c||={:10.6f}".format(c, np.linalg.norm(c)) )
+					print ("{:15s} {:6d} {:15.6f} {:15.6f} {:15.6f} {:15.6f}".format(fo.name, numberofatoms, np.linalg.norm(a), \
+					np.linalg.norm(b), np.linalg.norm(c), VOL_POS) )
+					
+					print ("'\u03B1=' {:6.6f} '\u03B2=' {:6.6f} '\u03B3=' {:6.6f}".format(alpha,beta,gamma))
+					#print ('Vol= {:6.6f} A^3'.format(VOL_POS))						
 					ofile.write ("***************************************************\n")
 					ofile.close()
+	print ("-"*80)				
 	print ("Number of folders detected: ", count)
 	return VOL_P
 
 ####
 def main_contcar():
 	count = 0
-	os.system("rm out_contcar.dat")
+	os.system("rm out_CONTCARS.dat")
 	VOL_C = [];	pos = []; kk = []; lattice = []; sum = 0
-	mypath = os.getcwd()
-	
+	mypath = os.getcwd()	
+	print ("-"*100)	
+	print (Back.GREEN + "{:15s} {:15s} {:15.6s} {:15.6s} {:15.6s} {:15.15s}".format("Directory", "# of atoms", "||a||", \
+	"||b||", "||c||", "VOL_CON[A^3]"),end="\n" )	
+	print ("-"*100)	
+	print(Style.RESET_ALL)	
 	for entry in os.listdir(mypath):
 		if os.path.isdir(os.path.join(mypath, entry)):	
 			for file in os.listdir(entry):
@@ -325,9 +336,9 @@ def main_contcar():
 					filepath = os.path.join(entry, file)
 					fo = open(filepath, 'r')
 					
-					ofile=open('out_CONTCARS.dat','a+')
+					ofile=open('out_CONTCARS.dat','a')
 					
-					print (colored('>>>>>>>>  Name of the file: ','yellow'), fo.name, end = '\n', flush=True)
+					#print (colored('>>>>>>>>  Name of the file: ','yellow'), fo.name, end = '\n', flush=True)
 					ofile.write (fo.name + '\n')
 					ofile.write ("")
 					firstline   = fo.readline()
@@ -339,19 +350,18 @@ def main_contcar():
 					elementtype = elementtype.split()					
 					numberofatoms=fo.readline()
 					Coordtype=fo.readline()
-					print ("Coordtype:", (Coordtype), end = '')
+					#print ("Coordtype:", (Coordtype), end = '')
 ##########################---------------------------------------------------------
-					print ("**********-------------------# of Atoms--------------------")
+					#print ("**********-------------------# of Atoms--------------------")
 					
 					nat = numberofatoms.split()
 					nat = [int(i) for i in nat]
-					print (nat)
 					for i in nat:
 						sum = sum + i
 					numberofatoms = sum
-					print ("Number of atoms:", (numberofatoms), end = '\n')
+					#print ("{} :: Number of atoms: {}".format(nat, numberofatoms) )
 ##########################---------------------------------------------------------						
-					print ("//////---------------Atomic positions-----------------")				
+					#print ("//////---------------Atomic positions-----------------")				
 					for x in range(int(numberofatoms)):
 						coord = fo.readline().split()
 						coord = [float(i) for i in coord]
@@ -359,8 +369,7 @@ def main_contcar():
 					pos = np.array(pos)
 					#print (pos)
 					
-					ofile.write ("\n")	
-										
+					ofile.write ("\n")				
 					fo.close()
 ##########################---------------------------------------------------------
 					a=[]; b=[]; c=[];
@@ -368,18 +377,14 @@ def main_contcar():
 					Latvec2=Latvec2.split()
 					Latvec3=Latvec3.split()
 ##########################---------------------------------------------------------
-					for ai in Latvec1:
-						a.append(float(ai))
-					for bi in Latvec2:
-						b.append(float(bi))
-					for ci in Latvec3:
-						c.append(float(ci))	
-					print ("#####------------------------------------------------")
-					print ('a=', a)
+					for ai in Latvec1: a.append(float(ai))
+					for bi in Latvec2: b.append(float(bi))
+					for ci in Latvec3: c.append(float(ci))	
+					#print ('a=', a)
 					ofile.write ("'a=' {}\n".format(a))
-					print ('b=', b)
+					#print ('b=', b)
 					ofile.write ("'b=' {}\n".format(b))
-					print ('c=', c)
+					#print ('c=', c)
 					ofile.write ("'c=' {}\n".format(c))			
 ##########################---------------------------------------------------------
 
@@ -387,19 +392,24 @@ def main_contcar():
 					VOL_CON = np.dot(a, np.cross(b,c))
 					VOL_C.append(VOL_CON)
 						
-					print ('\u03B1=', alpha, '\u03B2=', beta, '\u03B3=', gamma)
 					ofile.write ("'\u03B1=' {} '\u03B2=' {} '\u03B3=' {}\n".format(alpha,beta,gamma))
-					print ("#####------------------------------------------------")
-					print ('||a||=', np.linalg.norm(a))
 					ofile.write ("'||a||=' {}\n".format(np.linalg.norm(a)))
-					print ('||b||=', np.linalg.norm(b))
-					ofile.write ("'||b||=' {}\n".format(np.linalg.norm(b)))			
-					print ('||c||=', np.linalg.norm(c)) 
-					ofile.write ("'||c||=' {}\n".format(np.linalg.norm(c)))
-					print ('Vol= %4.6f ' %(VOL_CON)		)				
+					ofile.write ("'||b||=' {}\n".format(np.linalg.norm(b)))		
+					ofile.write ("'||c||=' {}\n".format(np.linalg.norm(c)))					
+					#print ("-"*80)
+					
+					#print ("a={} \t ||a||={:10.6f}".format(a, np.linalg.norm(a)) )
+					#print ("b={} \t ||b||={:10.6f}".format(b, np.linalg.norm(b)) )
+					#print ("c={} \t ||c||={:10.6f}".format(c, np.linalg.norm(c)) )
+					print ("{:15s} {:6d} {:15.6f} {:15.6f} {:15.6f} {:15.6f}".format(fo.name, numberofatoms, np.linalg.norm(a), \
+					np.linalg.norm(b), np.linalg.norm(c), VOL_CON) )
+
+					print ("'\u03B1=' {:6.6f} '\u03B2=' {:6.6f} '\u03B3=' {:6.6f}".format(alpha,beta,gamma))
+					#print ('Vol= {:6.6f} A^3'.format(VOL_CON), end="\n")						
 					ofile.write ("***************************************************\n")
 					ofile.close()
-			#print (VOL_C)		
+			#print (VOL_C)	
+	print ("-"*80)			
 	print ("Number of folders detected: ", count)
 	return VOL_C
 	
@@ -426,7 +436,9 @@ def lattice_angles(a,b,c):
 ####### BASH way of finding the # of directories in a working directory ###
 def volume_diff(VOL_P, VOL_C):
 	n=os.popen("find . -mindepth 1 -maxdepth 1 -type d | wc -l").read()
+	print ("-"*80)	
 	print ("VOL Diff A^3 %18s %12s %15.15s" %("CONTCAR",  "POSCAR",  "contcar-poscar"))
+	print ("-"*80)		
 	for i in range(int(n)):
 		print ("The difference is: %12.6f %12.6f %15.8f " %(VOL_C[i], VOL_P[i], VOL_C[i] - VOL_P[i]) )
 
