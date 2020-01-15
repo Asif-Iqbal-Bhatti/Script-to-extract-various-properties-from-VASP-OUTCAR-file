@@ -61,7 +61,7 @@ def poscar():
 	print ("Coordtype:", (Coordtype), end = '\n')	
 	
 ########################---------------------------------------------------------
-	print ("****-------------------# of Atoms--------------------")
+	print (">>>>>>>>>-------------------# of Atoms--------------------")
 	nat = numberofatoms.split()
 	nat = [int(i) for i in nat]
 	print (nat)
@@ -71,7 +71,7 @@ def poscar():
 	print ("Number of atoms:", (numberofatoms), end = '\n')
 ########################---------------------------------------------------------
 
-	#print ("****---------------Atomic positions------------------")				
+	#print (">>>>>>>>>---------------Atomic positions------------------")				
 	for x in range(int(numberofatoms)):
 		coord = file.readline().split()
 		coord = [float(i) for i in coord]
@@ -95,15 +95,18 @@ def poscar():
 		
 ########################---------------------------------------------------------
 
-	print ("//////---------------Lattice vectors-----------------")				
+	print (">>>>>>>>>---------------Lattice vectors distortions-----------------")				
 	lattice = np.array([a] + [b] + [c])
-	print (lattice)
-	determinant = np.linalg.det(lattice)
-	print ("//////---------------Space group-----------------")		
+	#determinant = np.linalg.det(lattice)
+	lld = local_lattice_distortion(a,b,c)
+	print ("lattice distortion parameter g: {}".format(lld) )
+	
+	print (">>>>>>>>>---------------Space group-----------------")		
 	print (" ")
-	print ( space_group_analyse(lattice, pos) )
+	sp, symm = space_group_analyse(lattice, pos)
+	print ( sp, symm )
 	print (" ")
-	print ("/////--------------------------------------------")
+	print (">>>>>>>>>--------------------------------------------")
 	print ('a=', a)
 	print ('b=', b)
 	print ('c=', c)
@@ -111,11 +114,25 @@ def poscar():
 	alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
 	beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
 	print ("ratio c/a = %2f" %(np.linalg.norm(c) / np.linalg.norm(a) ))
-	print ("#####------------------------------------------------")
+	print ("-"*100)
 	print ('||a||=%2f, \u03B1= %2f' %(np.linalg.norm(a), alpha))
 	print ('||b||=%2f  \u03B2= %2f' %(np.linalg.norm(b), beta))
 	print ('||c||=%2f  \u03B3= %2f' %(np.linalg.norm(c), gamma))
 	print ('Vol= %4.8f A^3; %4.8f [a.u]^3' %(volume(a,b,c,math.radians(alpha),math.radians(beta),math.radians(gamma) )))			
+###
+
+def local_lattice_distortion(a1,b1,c1):
+	#print ("The lattice distortion in paracrystals is measured by the lattice distortion parameter g")
+	#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
+	#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
+	#print ("")
+	a=np.linalg.norm(a1); b=np.linalg.norm(b1); c=np.linalg.norm(c1)
+	d = np.array([a,b,c])
+	d_mean = np.mean(d); d_std = np.std(d)
+	d_square_mean = (a**2 + b**2 + c**2)/3
+	g = np.sqrt( d_square_mean/(d_mean)**2 - 1 )
+	return g
+###
 
 def space_group_analyse(lattice, pos):
 	numbers = [1,2]			
@@ -147,6 +164,7 @@ def space_group_analyse(lattice, pos):
 	#print("Number of ir-kpoints: %d" % len(np.unique(mapping)))
 	#print((grid[np.unique(mapping)] + [0.5, 0.5, 0.5]) / mesh)
 	return sp, symm
+###
 
 def poscar_VASP42VASP5():
 	if not os.path.exists('POSCAR' and 'POTCAR'):
@@ -196,6 +214,7 @@ def poscar_VASP42VASP5():
 	test.close()
 	
 	print ("                        File is converted: POSCAR_W")
+###
 
 '''
 #####---------------------------------------------------------
@@ -289,7 +308,7 @@ def main_poscar():
 					ofile.write ("'b=' {}\n".format(b))
 					#print ('c=', c)
 					ofile.write ("'c=' {}\n".format(c))		
-					
+					lld = local_lattice_distortion(a,b,c)
 ##########################---------------------------------------------------------
 		
 					alpha, beta, gamma = lattice_angles(a,b,c)
@@ -308,11 +327,12 @@ def main_poscar():
 					print ("{:15s} {:6d} {:15.6f} {:15.6f} {:15.6f} {:15.6f}".format(fo.name, numberofatoms, np.linalg.norm(a), \
 					np.linalg.norm(b), np.linalg.norm(c), VOL_POS) )
 					
-					print ("'\u03B1=' {:6.6f} '\u03B2=' {:6.6f} '\u03B3=' {:6.6f}".format(alpha,beta,gamma))
+					print ("'\u03B1=' {:6.6f} '\u03B2=' {:6.6f} '\u03B3=' {:6.6f} g={:6.6f}".format(alpha,beta,gamma,lld))
+					print ("."*5)
 					#print ('Vol= {:6.6f} A^3'.format(VOL_POS))						
 					ofile.write ("***************************************************\n")
 					ofile.close()
-	print ("-"*80)				
+	print ("_"*30)				
 	print ("Number of folders detected: ", count)
 	return VOL_P
 
@@ -590,7 +610,8 @@ def ductile_test(ratio):
 		return "ductile"
 	else:
 		return "brittle"
-		
+###
+	
 def stability_test(matrix, crystaltype):
 	c = np.copy(matrix)
 
@@ -635,6 +656,7 @@ def stability_test(matrix, crystaltype):
 			print ("Condition (iii) satified.")
 		else:
 			print ("Condition (iii) NOT satisfied.")
+###
 
 def born_stability_criterion():
 	print ("Born stability criteria for the stability of following systems \n")
@@ -655,7 +677,7 @@ def born_stability_criterion():
 	print ("(xi) C22*(C33*C55 - C35^2) + 2*C23*C25*C35 - (C23^2)*C55 - (C25^2)*C33   > 0  ")
 	print ("(xii)  2*[C15*C25*(C33*C12 - C13*C23) + C15*C35*(C22*C13 - C12*C23) + C25*C35*(C11*C23 - C12*C13)] - [C15*C15*(C22*C33 - C23^2) + C25*C25*(C11*C33 - C13^2) + C35*C35*(C11*C22 - C12^2)] + C55*g > 0  ")
 	print (" where, g = [C11*C22*C33 - C11*C23*C23 - C22*C13*C13 - C33*C12*C12 + 2*C12*C13*C23 ] "	)	
-
+###
 
 '''
 #####---------------------------------------------------------
@@ -672,22 +694,29 @@ def energy_vs_volume():
 	
 	E=[]; dir_list=[]; count = 0; dir_E=[];
 	vol_cell=[]; strain_file=[]; strain_value=[] # strain_value is deformation
+	
 	print ("               >>>>> Extracting Energy from directories  <<<<<<")
 	for entry in os.listdir(mypath):
-		if fnmatch.fnmatchcase(entry,'strain-*'):
+		if not os.path.exists('strain-01'):
+			print (' ERROR: strain-* does not exist here.')
+			sys.exit(0)	
+		if fnmatch.fnmatchcase(entry,'strain-*'):		
 			f = open(entry,'r')
 			lines = f.readline()  #Read  first line only
 			strain_value.append( float(lines) )
 			f.close()
 			if os.path.isfile(os.path.join(mypath, entry)):
-				strain_file.append(entry)		
+				strain_file.append(entry)
+
 		if os.path.isdir(os.path.join(mypath, entry)):
-			dir_list.append(entry); 
+			dir_list.append(entry)
 			
 			for file in os.listdir(entry):
 				if file == "OUTCAR":
 					filepath = os.path.join(entry, file)
-					
+					if not os.path.exists(filepath):
+						print (' ERROR: OUTCAR does not exist here.')
+						sys.exit(0)
 					f = open(filepath,'r')
 					lines = f.readlines()
 					f.close()
@@ -700,7 +729,7 @@ def energy_vs_volume():
 					vol_cell.append(v)		
 					E.append(m)
 					count+=1	
-	#print (dir_list); print (E); print (vol_cell)
+	print("# of folders detected: ", count)
 	print ("Directory :%10.6s %14s %18s %25.20s " % ("Folder", "Energy(eV)", "Vol_of_cell(A^3)", "strain_deformation" ))
 		
 	for i in range(math.floor(count/2)): # 0 to 4
@@ -725,6 +754,7 @@ def energy_vs_volume():
 	for i in range(count):
 		file.write ("%12.6f %14.6f\n" %(strain_value[i], E[i] * eV2Hartree))	
 	file.close()
+###
 
 '''
 #####---------------------------------------------------------
@@ -869,8 +899,9 @@ def fitting_energy_vs_volume_curve():
 	ax.xaxis.set_major_locator(MaxNLocator(7))
 	
 	plt.savefig('PLOT.png',orientation='portrait',format='png')
+###
 
-####
+
 def sortvolume(s,e):
     ss=[]; ee=[]; ww=[]
     for i in range(len(s)): ww.append(s[i])
@@ -879,7 +910,8 @@ def sortvolume(s,e):
         ss.append(s[s.index(ww[i])])
         ee.append(e[s.index(ww[i])])
     return ss, ee
-		
+###
+	
 ####
 def Introduction():
 	global message
@@ -915,21 +947,27 @@ if __name__ == "__main__":
 	option = int(option)
 	if (option == 1):
 		poscar()
+		
 	elif (option == 2):
 		VOL_P = main_poscar()
 		VOL_C = main_contcar()
-		volume_diff(VOL_P, VOL_C)		
+		volume_diff(VOL_P, VOL_C)	
+		
 	elif (option == 3):
 		energy_vs_volume()
+		
 	elif (option == 4):
 		print("Reading OUTCAR. OUTCAR should be in the same directory from which this script is run ")		
 		pool = mp.Pool(mp.cpu_count())
 		elastic_matrix_VASP_STRESS()
 		pool.close()
+		
 	elif (option == 5):
 		fitting_energy_vs_volume_curve()
+		
 	elif (option == 6):
-		poscar_VASP42VASP5()		
+		poscar_VASP42VASP5()	
+		
 	else:
 		print ("INVALID OPTION")
 	
