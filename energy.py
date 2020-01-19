@@ -6,7 +6,7 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 
-ang2atomic 	= 	1.889725988579 # 1 A = 1.889725988579 [a.u]
+ang2atomic 	= 	1.889725988579  # 1 A = 1.889725988579 [a.u]
 Ang32Bohr3	=	6.74833304162   # 1 A^3 = 6.7483330371 [a.u]^3
 eV2Hartree	=	0.036749309
 	
@@ -14,25 +14,34 @@ def energy_vs_volume():
 	import fnmatch
 	mypath = os.getcwd()
 	os.system("rm energy-vs-volume energy-vs-strain")
+	eV2Hartree=0.036749309
+	Ang32Bohr3=6.74833304162
 	
 	E=[]; dir_list=[]; count = 0; dir_E=[];
 	vol_cell=[]; strain_file=[]; strain_value=[] # strain_value is deformation
+	
 	print ("               >>>>> Extracting Energy from directories  <<<<<<")
 	for entry in os.listdir(mypath):
-		if fnmatch.fnmatchcase(entry,'strain-*'):
+		if not os.path.exists('strain-01'):
+			print (' ERROR: strain-* does not exist here.')
+			sys.exit(0)	
+		if fnmatch.fnmatchcase(entry,'strain-*'):		
 			f = open(entry,'r')
 			lines = f.readline()  #Read  first line only
 			strain_value.append( float(lines) )
 			f.close()
 			if os.path.isfile(os.path.join(mypath, entry)):
-				strain_file.append(entry)		
+				strain_file.append(entry)
+
 		if os.path.isdir(os.path.join(mypath, entry)):
-			dir_list.append(entry); 
+			dir_list.append(entry)
 			
 			for file in os.listdir(entry):
 				if file == "OUTCAR":
 					filepath = os.path.join(entry, file)
-					
+					if not os.path.exists(filepath):
+						print (' ERROR: OUTCAR does not exist here.')
+						sys.exit(0)
 					f = open(filepath,'r')
 					lines = f.readlines()
 					f.close()
@@ -45,7 +54,7 @@ def energy_vs_volume():
 					vol_cell.append(v)		
 					E.append(m)
 					count+=1	
-	#print (dir_list); print (E); print (vol_cell)
+	print("# of folders detected: ", count)
 	print ("Directory :%10.6s %14s %18s %25.20s " % ("Folder", "Energy(eV)", "Vol_of_cell(A^3)", "strain_deformation" ))
 		
 	for i in range(math.floor(count/2)): # 0 to 4
@@ -70,4 +79,4 @@ def energy_vs_volume():
 	for i in range(count):
 		file.write ("%12.6f %14.6f\n" %(strain_value[i], E[i] * eV2Hartree))	
 	file.close()
-	
+###
