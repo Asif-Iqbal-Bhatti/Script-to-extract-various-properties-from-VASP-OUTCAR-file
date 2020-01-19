@@ -1,14 +1,3 @@
-import os, sys, spglib
-import math, glob
-import numpy as np
-import subprocess
-from os import listdir
-from os.path import isfile, join
-from pathlib import Path
-from termcolor import colored
-import multiprocessing as mp
-from colorama import Fore, Back, Style
-from   pylab import *
 from   sys   import stdin
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ptk 
@@ -16,18 +5,12 @@ import pylab             as pyl
 import matplotlib.style
 
 bohr_radius     = 0.529177
-bohr32ang3		  = 0.14818474347
-joule2hartree	  = 4.3597482
+bohr32ang3		= 0.14818474347
+joule2hartree	= 4.3597482
 joule2rydberg   = joule2hartree/2.
 unitconv        = joule2hartree/bohr_radius**3*10.**3
-
-'''
-This script is the modification of the script supplied with exciting code to calculate Bulk modulus. All rights belongs to
-the original author. 
-'''
-
-def fitting_energy_vs_volume_curve():
 	
+def fitting_energy_vs_volume_curve():	
 	if (str(os.path.exists('energy-vs-volume'))=='False'): 
 		sys.exit("ERROR: file energy-vs-volume not found!\n")
 	energy = []; volume = []
@@ -38,7 +21,7 @@ def fitting_energy_vs_volume_curve():
 		line = line.strip()
 		if len(line) == 0: break
 		energy.append(float(line.split()[1]))
-		volume.append(float(line.split()[0]))	
+		volume.append(float(line.split()[0]))
 	volume,energy=sortvolume(volume,energy)
 
 	print ("===============================")
@@ -65,13 +48,17 @@ def fitting_energy_vs_volume_curve():
 	if ( scheck == "3" ): isym = 3 ; factor=4 ; slabel = "(fcc)"
 	print ("Verification lattice symmetry code      >>>> %d " %(isym) )
 #-------------------------------------------------------------------------------
+	print ('%s' %('-'*105) )
 	print ('%20.25s %29.30s %21.30s %11.12s %18.30s' %("Opt_vol Bohr^3 (Ang^3)", "Lattice_const Bohr (A)", "Bulk_modulus [GPa]", "Log(chi)", "Polynomial_order"))
+	print ('%s' %('-'*105) )
 	for order_of_fit in range(2, 11): #order of polynomial fitting
 		if order_of_fit % 2 == 0: 
 			order_of_fit = int(order_of_fit)
 			fitr = np.polyfit(volume,energy,order_of_fit)
 			curv = np.poly1d(fitr)
+			oned = np.poly1d(np.polyder(fitr,1)) #
 			bulk = np.poly1d(np.polyder(fitr,2))
+			bpri = np.poly1d(np.polyder(fitr,3)) #
 			vmin = np.roots(np.polyder(fitr))
 			dmin=[]
 			for i in range(len(vmin)):
@@ -80,17 +67,16 @@ def fitting_energy_vs_volume_curve():
 						if(bulk(vmin[i]) > 0): dmin.append(vmin[i].real)
 			
 			xvol = np.linspace(volume[0],volume[-1],100)
+			if (len(dmin) > 1): print ("WARNING: Multiple minima are found!\n")
+			if (len(dmin) == 0): print ("WARNING: No minimum in the given xrange!\n")
 			
 			chi = 0
 			for i in range(len(energy)): 
 				chi=chi+(energy[i]-curv(volume[i]))**2
 			chi=math.sqrt(chi)/len(energy)
-#-------------------------------------------------------------------------------	
-			if (len(dmin) > 1): 
-				print ("WARNING: Multiple minima are found!\n")
-				print ("##############################################\n")
-			
+#-------------------------------------------------------------------------------			
 			for i in range(len(dmin)):
+				x0=dmin[len(dmin)-1-i]
 				v0=dmin[len(dmin)-1-i]
 				a0=(factor*v0)**(0.33333333333)
 				b0=bulk(v0)*v0*unitconv
@@ -99,9 +85,7 @@ def fitting_energy_vs_volume_curve():
 					print("%12.6f (%11.6f) %12.6f (%9.6f) %17.6f %13.2f %10d\n" %(v0, v0*bohr32ang3, a0, a0*bohr_radius, b0, math.log10(chi), order_of_fit), end="") 				
 				else: 
 					print("%12.6f(%12.6f) %12.6f(%12.6f) %17.6f %13.2f %10d\n" %(v0, v0*bohr32ang3, a0, a0*bohr_radius, b0, math.log10(chi), order_of_fit), end="")
-							
-			if ( len(dmin) == 0): print ("WARNING: No minimum in the given xrange!\n")
-		
+	print ('%s' %('-'*105) )
 #-------------------------------------------------------------------------------
 
 	xlabel = u'Volume [Bohr\u00B3]'; ylabel = r'Energy [Ha]'
@@ -151,8 +135,8 @@ def fitting_energy_vs_volume_curve():
 	ax.xaxis.set_major_locator(MaxNLocator(7))
 	
 	plt.savefig('PLOT.png',orientation='portrait',format='png')
-#-------------------------------------------------------------------------------
 
+####
 def sortvolume(s,e):
     ss=[]; ee=[]; ww=[]
     for i in range(len(s)): ww.append(s[i])
@@ -161,4 +145,3 @@ def sortvolume(s,e):
         ss.append(s[s.index(ww[i])])
         ee.append(e[s.index(ww[i])])
     return ss, ee
-#-------------------------------------------------------------------------------
