@@ -34,7 +34,7 @@ def poscar():
 	print ("Coordtype:", (Coordtype), end = '\n')	
 	
 ########################---------------------------------------------------------
-	print ("*************-------------------# of Atoms--------------------")
+	print (">>>>>>>>>-------------------# of Atoms--------------------")
 	nat = numberofatoms.split()
 	nat = [int(i) for i in nat]
 	print (nat)
@@ -44,7 +44,7 @@ def poscar():
 	print ("Number of atoms:", (numberofatoms), end = '\n')
 ########################---------------------------------------------------------
 
-	#print ("*************---------------Atomic positions------------------")				
+	#print (">>>>>>>>>---------------Atomic positions------------------")				
 	for x in range(int(numberofatoms)):
 		coord = file.readline().split()
 		coord = [float(i) for i in coord]
@@ -68,16 +68,50 @@ def poscar():
 		
 ########################---------------------------------------------------------
 
-	print ("//////---------------Lattice vectors-----------------")				
+	print (">>>>>>>>>---------------Lattice vectors distortions-----------------")				
 	lattice = np.array([a] + [b] + [c])
-	print (lattice)
+	#determinant = np.linalg.det(lattice)
+	lld = local_lattice_distortion(a,b,c)
+	print ("lattice distortion parameter g: {}".format(lld) )
+	
+	print (">>>>>>>>>---------------Space group-----------------")		
 	print (" ")
-	print ("//////---------------Space group-----------------")		
+	sp, symm = space_group_analyse(lattice, pos)
+	print ( sp, symm )
 	print (" ")
-	numbers = [1,1]			
+	print (">>>>>>>>>--------------------------------------------")
+	print ('a=', a)
+	print ('b=', b)
+	print ('c=', c)
+	gamma = math.degrees(math.acos(np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))))
+	alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
+	beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
+	print ("ratio c/a = %2f" %(np.linalg.norm(c) / np.linalg.norm(a) ))
+	print ("-"*100)
+	print ('||a||=%2f, \u03B1= %2f' %(np.linalg.norm(a), alpha))
+	print ('||b||=%2f  \u03B2= %2f' %(np.linalg.norm(b), beta))
+	print ('||c||=%2f  \u03B3= %2f' %(np.linalg.norm(c), gamma))
+	print ('Vol= %4.8f A^3; %4.8f [a.u]^3' %(volume(a,b,c,math.radians(alpha),math.radians(beta),math.radians(gamma) )))			
+###
+
+def local_lattice_distortion(a1,b1,c1):
+	#print ("The lattice distortion in paracrystals is measured by the lattice distortion parameter g")
+	#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
+	#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
+	#print ("")
+	a=np.linalg.norm(a1); b=np.linalg.norm(b1); c=np.linalg.norm(c1)
+	d = np.array([a,b,c])
+	d_mean = np.mean(d); d_std = np.std(d)
+	d_square_mean = (a**2 + b**2 + c**2)/3
+	g = np.sqrt( d_square_mean/(d_mean)**2 - 1 )
+	return g
+###
+
+def space_group_analyse(lattice, pos):
+	numbers = [1,2]			
 	cell = (lattice, pos, numbers)
-	print(spglib.get_spacegroup(cell, symprec=1e-5))
-	#print(spglib.get_symmetry(cell, symprec=1e-5))
+	sp=spglib.get_spacegroup(cell, symprec=1e-5)
+	symm=spglib.get_symmetry(cell, symprec=1e-5)
 	#print(spglib.niggli_reduce(lattice, eps=1e-5))
 	
 	#mesh = [8, 8, 8]
@@ -102,26 +136,11 @@ def poscar():
 	## Irreducible k-points
 	#print("Number of ir-kpoints: %d" % len(np.unique(mapping)))
 	#print((grid[np.unique(mapping)] + [0.5, 0.5, 0.5]) / mesh)
-
-	print (" ")
-	print ("/////------------------------------------------------")
-	
-	print ('a=', a)
-	print ('b=', b)
-	print ('c=', c)
-	gamma = math.degrees(math.acos(np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))))
-	alpha = math.degrees(math.acos(np.dot(b,c) / (np.linalg.norm(b) * np.linalg.norm(c))))
-	beta  = math.degrees(math.acos(np.dot(a,c) / (np.linalg.norm(a) * np.linalg.norm(c))))
-	print ("ratio c/a = %2f" %(np.linalg.norm(c) / np.linalg.norm(a) ))
-	print ("#####------------------------------------------------")
-	print ('||a||=%2f, \u03B1= %2f' %(np.linalg.norm(a), alpha))
-	print ('||b||=%2f  \u03B2= %2f' %(np.linalg.norm(b), beta))
-	print ('||c||=%2f  \u03B3= %2f' %(np.linalg.norm(c), gamma))
-	print ('Vol= %4.8f A^3; %4.8f [a.u]^3' %(volume(a,b,c,math.radians(alpha),math.radians(beta),math.radians(gamma) )))			
-
+	return sp, symm
+###
 
 def poscar_VASP42VASP5():
-	if not os.path.exists('POSCAR' or 'POTCAR'):
+	if not os.path.exists('POSCAR' and 'POTCAR'):
 		print (' ERROR: POSCAR does not exist here.')
 		sys.exit(0)	
 	file1 = open("POSCAR",'r')
@@ -132,10 +151,12 @@ def poscar_VASP42VASP5():
 	line2 = file2.readlines()		
 	file2.close()
 	
+	atom_number=[]
 	for i in line1:
 		if ("Direct" or "direct" or "d" or "D") in i:
 			PP=line1.index(i)
-	#print (lines[PP+1:], end="\n")
+	atom_number = line1[5].split()
+	print(atom_number)
 	
 	elementtype=[]; count=0
 	for i in line2:
@@ -153,11 +174,20 @@ def poscar_VASP42VASP5():
 		test.write("\t" +  j)
 	test.write("\n" )
 	
-	for i in range(len(line1)-PP+1):
-		test.write(line1[PP-1+i] )
+	for j in atom_number:
+		test.write("\t" +  j )
+	test.write("\n" )
+	
+	test.write("Selective dynamics")
+	test.write("\n" )
+	
+	for i in range(len(line1)-PP):
+		test.write(line1[PP+i] )
 		
 	test.close()
+	
 	print ("                        File is converted: POSCAR_W")
+###
 
 
 #### math.sin function takes argument in radians ONLY
