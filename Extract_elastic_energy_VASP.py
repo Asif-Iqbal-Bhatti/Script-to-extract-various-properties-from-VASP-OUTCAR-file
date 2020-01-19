@@ -3,15 +3,15 @@
 '''
 #####---------------------------------------------------------
 #####---------------------------------------------------------
-#    Credit	: 	Asif Iqbal BHATTI
+#    Credit	: Asif Iqbal BHATTI
 #    CODE to: 	OBTAIN Elastic properties form OUTCAR files,
 #               compare POSCAR and CONTCAR volume deformation
 #               upon minimization, and extract energy from a number
-#				of directories.  
-#    VERSION: 	This script runs with python3 or later
-#    FORMAT	:	POSCAR VASP5 format
-#    DATE	: 	28/12/2019
-#    USAGE	: 	python3 sys.argv[0]
+#		of directories.  
+#    VERSION	: This script runs with python3 or later
+#    FORMAT	: POSCAR VASP5 format
+#    DATE	: 28/12/2019
+#    USAGE	: python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 '''
@@ -395,7 +395,7 @@ def main_contcar():
 					a=[]; b=[]; c=[];
 					Latvec1=Latvec1.split()
 					Latvec2=Latvec2.split()
-					Latvec3=Latvec3.split()
+					Latvec3=Latvec3.split()					
 ##########################---------------------------------------------------------
 					for ai in Latvec1: a.append(float(ai))
 					for bi in Latvec2: b.append(float(bi))
@@ -405,7 +405,8 @@ def main_contcar():
 					#print ('b=', b)
 					ofile.write ("'b=' {}\n".format(b))
 					#print ('c=', c)
-					ofile.write ("'c=' {}\n".format(c))			
+					ofile.write ("'c=' {}\n".format(c))		
+					lld = local_lattice_distortion(a,b,c)					
 ##########################---------------------------------------------------------
 
 					alpha, beta, gamma = lattice_angles(a,b,c)
@@ -424,7 +425,8 @@ def main_contcar():
 					print ("{:15s} {:6d} {:15.6f} {:15.6f} {:15.6f} {:15.6f}".format(fo.name, numberofatoms, np.linalg.norm(a), \
 					np.linalg.norm(b), np.linalg.norm(c), VOL_CON) )
 
-					print ("'\u03B1=' {:6.6f} '\u03B2=' {:6.6f} '\u03B3=' {:6.6f}".format(alpha,beta,gamma))
+					print ("'\u03B1=' {:6.6f} '\u03B2=' {:6.6f} '\u03B3=' {:6.6f} g={:6.6f}".format(alpha,beta,gamma,lld))
+					print ("."*5)
 					#print ('Vol= {:6.6f} A^3'.format(VOL_CON), end="\n")						
 					ofile.write ("***************************************************\n")
 					ofile.close()
@@ -931,12 +933,12 @@ if __name__ == "__main__":
 	print ("**** Following are the options: ")
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
 
-	print ("(1) To execute only POSCAR file (Convert Lattice Matrix to Lattice parameter)")
-	print ("(2) To execute POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
-	print ("(3) To extract ENERGY from directories")
-	print ("(4) To extract ELASTIC CONSTANTS from OUTCAR file (IBRION=6,ISIF=3)")
-	print ("(5) To Fit energy vs volume curve to extract Ealstic Moduli: B0")
-	print ("(6) CONVERT POSCAR file from VASP4 to VASP5 format")
+	print ("(1) To execute ONLY POSCAR file (Lattice Matrix, lattice distortion)")
+	print ("(2) To find POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
+	print ("(3) Extract ENERGIES from directories *")
+	print ("(4) Extract ELASTIC CONSTANTS from OUTCAR file (VASP: IBRION=6,ISIF=3)")
+	print ("(5) Fit energy vs volume curve to extract Ealstic Moduli (Exciting: Elastic code) ")
+	print ("(6) Convert POSCAR file from VASP4 to VASP5 format")
 
 	
 	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
