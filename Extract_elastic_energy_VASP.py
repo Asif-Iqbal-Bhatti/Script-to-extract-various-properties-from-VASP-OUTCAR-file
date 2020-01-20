@@ -3,15 +3,15 @@
 '''
 #####---------------------------------------------------------
 #####---------------------------------------------------------
-#    Credit	: Asif Iqbal BHATTI
+#    Credit	: 	Asif Iqbal BHATTI
 #    CODE to: 	OBTAIN Elastic properties form OUTCAR files,
 #               compare POSCAR and CONTCAR volume deformation
 #               upon minimization, and extract energy from a number
-#		of directories.  
-#    VERSION	: This script runs with python3 or later
-#    FORMAT	: POSCAR VASP5 format
-#    DATE	: 28/12/2019
-#    USAGE	: python3 sys.argv[0]
+#				of directories.  
+#    VERSION: 	This script runs with python3 or later
+#    FORMAT	:	POSCAR VASP5 format
+#    DATE	: 	28/12/2019
+#    USAGE	: 	python3 sys.argv[0]
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 '''
@@ -32,7 +32,7 @@ init(autoreset=True)
 
 '''
 ##########################---------------------------------------------------------
-#		1-	Reading only POSCAR file from the command prompt in a given directory
+#		1-	Read only POSCAR file in a given directory & obtain local lattice distortion
 ##########################---------------------------------------------------------
 '''
 
@@ -134,6 +134,75 @@ def local_lattice_distortion(a1,b1,c1):
 	return g
 ###
 
+def local_lattice_distortion_DEF1():
+	#print ("The lattice distortion in paracrystals is measured by the lattice distortion parameter g")
+	#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
+	#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
+	print ("+"*40,"HUME ROTHERY RULE","+"*40)
+	C_i=C=0.2 ; r_avg = 0.0; del_sum=0.0
+	elements = ["Nb", "Hf", "Ta", "Ti", "Zr"]
+	eta = {
+	"Nb" : 1.98,
+	"Hf" : 2.08,
+	"Ta" : 2.00,
+	"Ti" : 1.76,
+	"Zr" : 2.06, }
+	
+	print ("                      {element: atomic radius}")
+	print (eta)
+	
+	for i in elements: 
+		r_avg = r_avg + C * eta[i] 
+	
+	for j in elements:
+		del_sum = del_sum + C * ( 1 - float(eta[j]) / r_avg )
+	del_sum = 100 * np.sqrt(del_sum) 	
+	print("HEA_atomic_size_mismatch: \u03B4={}".format(del_sum))
+###
+	
+def local_lattice_distortion_DEF2():
+	print ("Song, H. et al. Local lattice distortion in high-entropy alloys.")
+	print ("Phys. Rev. Mater. 1, 23404 (2017).")
+	print ("_____| Different definition of the atomic radius for the description ")
+	print ("       of the local lattice distortion in HEAs")
+	
+	if not os.path.exists('POSCAR' and 'CONTCAR'):
+		print (' ERROR: POSCAR & CONTCAR does not exist')
+		sys.exit(0)
+	print('Reading POSCAR and CONTCAR ... \n')
+	
+	x = []; y =[]; z=[]
+	xp =[]; yp = []; zp = []; temp=0
+	
+	f = open('POSCAR','r')
+	lines_poscar = f.readlines()
+	f.close()
+	
+	f = open('CONTCAR','r')
+	lines_contcar = f.readlines()
+	f.close()
+	
+	sum_atoms = lines_poscar[6].split()  ### reading 7th lines for reading # of atoms
+	sum_atoms = [int(i) for i in sum_atoms]
+	sum_atoms = sum(sum_atoms)
+	
+	for i in lines_poscar:
+		if "Direct" in i:
+			lp=lines_poscar.index(i)
+	for j in lines_contcar:
+		if "Direct" in j:
+			lc=lines_contcar.index(j)
+			
+	for i in range(sum_atoms):
+		x, y, z    = lines_poscar[lp+1+i].split()
+		xp, yp, zp = lines_contcar[lp+1+i].split()
+		x = float(x); y = float(y); z = float(z)
+		xp = float(xp); yp = float(yp); zp = float(zp)
+		temp = temp + np.sqrt( (x-xp)**2 + (y-yp)**2 + (z-zp)**2 )
+	temp = temp/sum_atoms
+	print("local lattice distortion: \u0394d={}".format(temp))	
+###
+
 def space_group_analyse(lattice, pos):
 	numbers = [1,2]			
 	cell = (lattice, pos, numbers)
@@ -223,7 +292,6 @@ def poscar_VASP42VASP5():
 '''
 
 def main_poscar():
-
 	count = 0
 	os.system("rm out_POSCARS.dat")
 	VOL_P = []; pos = []; kk = []; lattice = [];
@@ -465,6 +533,7 @@ def volume_diff(VOL_P, VOL_C):
 		print ("The difference is: %12.6f %12.6f %15.8f " %(VOL_C[i], VOL_P[i], VOL_C[i] - VOL_P[i]) )
 
 ####
+
 '''
 #####---------------------------------------------------------
 #            3- ELASTIC PROPERTIES from VASP OUTCAR file "STRESS APPROACH"
@@ -499,7 +568,7 @@ class Elastic_Matrix:
 		ls = np.matrix(Eij).reshape(3,3)
 		return ls
 
-
+###
 def elastic_matrix_VASP_STRESS():
 	while True:		
 		if not os.path.exists('OUTCAR'):
@@ -606,7 +675,7 @@ def elastic_matrix_VASP_STRESS():
 		print("Isotropic Poisson ratio: ", mu)			
 		break
 		
-		
+###		
 def ductile_test(ratio):
 	if(ratio > 1.75):
 		return "ductile"
@@ -683,11 +752,11 @@ def born_stability_criterion():
 
 '''
 #####---------------------------------------------------------
-#            4- EXTRACT ENERGY & VOLUME from VASP OUTCAR file
+#            4- CREATE ENERGY vs VOLUME file from VASP OUTCAR file "STRAIN APPROACH"
 #####--------------------------------------------------------- 
 '''
 
-def energy_vs_volume():
+def create_energy_vs_volume():
 	import fnmatch
 	mypath = os.getcwd()
 	os.system("rm energy-vs-volume energy-vs-strain")
@@ -697,10 +766,10 @@ def energy_vs_volume():
 	E=[]; dir_list=[]; count = 0; dir_E=[];
 	vol_cell=[]; strain_file=[]; strain_value=[] # strain_value is deformation
 	
-	print ("               >>>>> Extracting Energy from directories  <<<<<<")
+	print ("               >>>>> Extracting Energies from directories  <<<<<<")
 	for entry in os.listdir(mypath):
 		if not os.path.exists('strain-01'):
-			print (' ERROR: strain-* does not exist here.')
+			print (' ERROR: strain-* files does not exist. create a strain file for each deformation values.')
 			sys.exit(0)	
 		if fnmatch.fnmatchcase(entry,'strain-*'):		
 			f = open(entry,'r')
@@ -760,11 +829,12 @@ def energy_vs_volume():
 
 '''
 #####---------------------------------------------------------
-#            5- FITTING ENERGY & VOLUME CURVE from VASP OUTCAR file
+#            5- FITTING ENERGY vs VOLUME CURVE from VASP OUTCAR file
 #####--------------------------------------------------------- 
 '''
 
-def fitting_energy_vs_volume_curve():
+###
+def fitting_energy_vs_volume_curve_ELASTIC():
 	from   sys   import stdin
 	import matplotlib.pyplot as plt
 	import matplotlib.ticker as ptk 
@@ -903,7 +973,6 @@ def fitting_energy_vs_volume_curve():
 	plt.savefig('PLOT.png',orientation='portrait',format='png')
 ###
 
-
 def sortvolume(s,e):
     ss=[]; ee=[]; ww=[]
     for i in range(len(s)): ww.append(s[i])
@@ -913,65 +982,211 @@ def sortvolume(s,e):
         ee.append(e[s.index(ww[i])])
     return ss, ee
 ###
+
+'''
+#####---------------------------------------------------------
+#            6- EVALUATE Mechanical properties from Cij Matrix
+#####--------------------------------------------------------- 
+'''
+
+
+def mechanical_properties():
+	import numpy as np
+	import math, scipy, os, sys
+	from numpy import linalg as LA
+	np.set_printoptions(precision=6)
+
+	'''
+	# | Elastic Properties
+	# | Code for calculating mechanical properties 
+	#   from Energy vs Strain relationship
+	# 
+	# Equations can be found at Golesorkhtabar, R., Pavone, P., Spitaler, J., 
+	# Puschnig, P. & Draxl, C. ElaStic: A tool for calculating second-order elastic 
+	# constants from first principles. Comput. Phys. Commun. 184, 1861–1873 (2013).
+	'''
+
+	# Elastic constants have been obtained from SOEC approach mentioned in the above 
+	# paper. For three distortions of the crystal three constants are extracted: 
+	# C11, C44, C12. For cubic system the matrix is symmetric.
 	
+	print ("This script is for calculating mechanical properties")
+	print ("for cubic system. The values have to be supplied in the script.")
+
+	############################## INPUT PARAMETERS ################################
+	
+	c11=c22=c33=127.51 ; 
+	c44= 77.06/3 
+	B= 116.11
+	c12=c21=c13=c31=c23=c32=(1/6) * (9 * B - 3 * c11)
+	#c12=c21=c13=c31=c23=c32=80.86
+	
+	################################################################################
+	print ("-"*100)
+	print ("The STIFFNESS MATRIX Cij is:", end=("\n"))
+	Cij=[   [c11,c12,c13,0,0,0], 
+			[c21,c22,c23,0,0,0], 
+			[c31,c32,c33,0,0,0],
+			[0,0,0,c44,0,0],
+			[0,0,0,0,c44,0],
+			[0,0,0,0,0,c44]]
+	Cij=np.matrix(Cij)
+	Cij=np.matrix(Cij).reshape((6,6))
+	
+	print (Cij)
+	evals, eigenvec = LA.eig(Cij)
+	print ("-"*100)
+	print("The Eigenvalues are: ", evals)
+	#print("The Eigenvectors are: ")
+	#print(eigenvec)
+	print ("-"*100)
+	# ### Compliance tensor  s_{ij}$ $(GPa^{-1})$
+	#  s_{ij} = C_{ij}^{-1}$
+	print ("-"*100)
+	print ("The COMPLIANCE MATRIX Sij is:", end=("\n"))
+	Sij = np.linalg.inv(Cij)
+	print (Sij)
+	print ("-"*100)
+	
+	# Voigt bulk modulus  K_v  $(GPa)$
+	# 9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
+	Bv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0])) / 9
+	
+	# Voigt shear modulus  G_v  $(GPa)$
+	#  15 G_v = (C_{11}+C_{22}+C_{33}) - (C_{12} + C_{23} + C_{31}) + 3(C_{44} + C_{55} + C_{66})$
+	Gv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) - (Cij[0,1] + Cij[1,2] + Cij[2,0]) + 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15
+	
+	## Poisson's ratio: Voigt
+	NuV = (3*Bv - Gv)/(6*Bv)
+	
+	## Young's: Voigt
+	Ev = (9*Bv*Gv)/(3*Bv + Gv)
+	#--------------------------------------------------------------------------------------------
+	# Reuss bulk modulus  K_R  $(GPa)$
+	#  1/K_R = (s_{11}+s_{22}+s_{33}) + 2(s_{12} + s_{23} + s_{31})$
+	Br = 1/((Sij[0,0] + Sij[1,1] + Sij[2,2]) + 2 * (Sij[0,1] + Sij[1,2] + Sij[2,0])) 
+	
+	# Reuss shear modulus  G_v  $(GPa)$
+	#   15/G_R = 4(s_{11}+s_{22}+s_{33}) - 4(s_{12} + s_{23} + s_{31}) + 3(s_{44} + s_{55} + s_{66})$
+	Gr = (1/15) * (4 * (Sij[0,0] + Sij[1,1] + Sij[2,2]) - (Sij[0,1] + Sij[1,2] + Sij[2,0]) + 3 * (Sij[3,3] + Sij[4,4] + Sij[5,5]))
+	
+	## Poisson's ratio: Reuss
+	NuR = (3*Br - Gr)/(6*Br)
+	
+	## Young's: Reuss
+	Er = (9*Br*Gr)/(3*Br + Gr)
+	##################################################################################
+	print ("{:30.8s} {:20.8s} {:20.8s} {:20.8s}".format(" ","Voigt", "Reuss ", "Hill") )
+	print ("-"*100)
+	# #Hill bulk modulus  K_{VRH}$ $(GPa)$
+	#  K_{VRH} = (K_R + K_v)/2 
+	B_H = (Bv + Br)/2
+	#print ("VRH bulk modulus  (GPa): %20.8f " %(B_H) )
+	
+	# Hill shear modulus  G_{VRH}$ $(GPa)$
+	#  G_{VRH} = (G_R + G_v)/2 
+	G_H = (Gv + Gr)/2
+	#print ("VRH shear modulus (GPa): %20.8f " %(G_H) )
+	
+	# Young modulus E = 9BG/(3B+G)
+	E_H = 9 * B_H * G_H / (3 * B_H + G_H)
+	#print ("Young modulus E : {:1.8s} {:20.8f}".format(" ",E_H) )
+	
+	# ### Isotropic Poisson ratio $\mu 
+	# $\mu = (3K_{VRH} - 2G_{VRH})/(6K_{VRH} + 2G_{VRH})$
+	nu_H = (3 * B_H - 2 * G_H) / (6 * B_H + 2 * G_H )
+	#print ("Isotropic Poisson ratio: {:15.8f} ".format(nu_H) )
+	
+	print ("{:12.20s} {:20.6f} {:20.6f} {:20.6f}".format("Bulk Modulus (GPa)",Bv, Br, B_H) )
+	print ("{:12.20s} {:20.6f} {:20.6f} {:20.6f}".format("Shear Modulus(GPa)",Gv, Gr, G_H) )
+	print ("{:12.20s} {:20.6f} {:20.6f} {:20.6f}".format("Young Modulus(GPa)",Ev, Er, E_H) )
+	print ("{:18.20s} {:20.6f} {:20.6f} {:20.6f}".format("Poisson ratio ", NuV, NuR, nu_H) )
+	
+	print ("-"*100)
+###
+
+
+'''
+#####---------------------------------------------------------
+#            				 INTRODUCTION
+#####--------------------------------------------------------- 
+'''
+
 ####
 def Introduction():
 	global message
 	message = "              ____| Python script to process various properties |____"
 	print(message)
 
+
+
+'''
+#####---------------------------------------------------------
+#            				 MAIN ENGINE
+#####--------------------------------------------------------- 
+'''
+
 ####
 if __name__ == "__main__":
 
 	Introduction()
+	print(colored('@'*80,'yellow'), end = '\n', flush=True)
 	print("Number of processors Detected: ", mp.cpu_count())
 	print(Back.MAGENTA + ' NB: POSCAR should be in VASP 5 format & without selective dynamics', end = '\n', flush=True)
 	print(Style.RESET_ALL)	
-	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
-	print ('>>> USAGE: execute by typing python3 sys.argv[0]')
-	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
-	print ("**** Following are the options: ")
-	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
+	print(colored('-'*80,'red'), end = '\n', flush=True)
+	print('>>> USAGE: execute by typing python3 sys.argv[0]')
+	print(colored('~'*80,'red'), end = '\n', flush=True)
+	print("**** Following are the options: ")
+	print(colored('-'*80,'red'), end = '\n', flush=True)
 
-	print ("(1) To execute ONLY POSCAR file (Lattice Matrix, lattice distortion)")
-	print ("(2) To find POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
-	print ("(3) Extract ENERGIES from directories *")
-	print ("(4) Extract ELASTIC CONSTANTS from OUTCAR file (VASP: IBRION=6,ISIF=3)")
-	print ("(5) Fit energy vs volume curve to extract Ealstic Moduli (Exciting: Elastic code) ")
-	print ("(6) Convert POSCAR file from VASP4 to VASP5 format")
+	print("(01) To execute only POSCAR file (local lattice distortion DEF 1-3)")
+	print("(02) To execute POSCAR CELL VOLUME DIFFERENCE with final CONTCAR file")
+	print("(03) To extract ENERGY from directories")
+	print("(04) To extract ELASTIC CONSTANTS from OUTCAR file (IBRION=6,ISIF=3)")
+	print("(05) To Fit energy vs volume curve to extract Elastic Moduli: B0 ... ")
+	print("(06) CONVERT POSCAR file from VASP4 to VASP5 format")
+	print("(07) Calculate manually Elastic constants by entering Cij values")
+	print("(08) Create directories for PHONON calculations generated with PHONOPY code")
 
+	print (colored('~'*80,'red'), end = '\n', flush=True)
+	print (colored('*'*80,'red'), end = '\n', flush=True)
+
+	while True:
+		option = input("Enter the option as listed above: ")
+		option = int(option)
+		
+		if (option == 1):
+			poscar()
+			
+		elif (option == 2):
+			VOL_P = main_poscar()
+			VOL_C = main_contcar()
+			volume_diff(VOL_P, VOL_C)
+			
+		elif (option == 3):
+			create_energy_vs_volume()
+			
+		elif (option == 4):
+			print("OUTCAR should be in the same directory from which this script is run ")		
+			pool = mp.Pool(mp.cpu_count())
+			elastic_matrix_VASP_STRESS()
+			pool.close()
+			
+		elif (option == 5):
+			fitting_energy_vs_volume_curve_ELASTIC()
+			
+		elif (option == 6):
+			poscar_VASP42VASP5()	
 	
-	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
-	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
-	print (colored(' -----------------------------------------------------------','red'), end = '\n', flush=True)
-
-	option = input("Enter the option as listed above: ")
-	option = int(option)
-	if (option == 1):
-		poscar()
+		elif (option == 7):
+			mechanical_properties()
+	
+		elif (option == 8):
+			pass
 		
-	elif (option == 2):
-		VOL_P = main_poscar()
-		VOL_C = main_contcar()
-		volume_diff(VOL_P, VOL_C)	
-		
-	elif (option == 3):
-		energy_vs_volume()
-		
-	elif (option == 4):
-		print("Reading OUTCAR. OUTCAR should be in the same directory from which this script is run ")		
-		pool = mp.Pool(mp.cpu_count())
-		elastic_matrix_VASP_STRESS()
-		pool.close()
-		
-	elif (option == 5):
-		fitting_energy_vs_volume_curve()
-		
-	elif (option == 6):
-		poscar_VASP42VASP5()	
-		
-	else:
-		print ("INVALID OPTION")
+		else:
+			print ("INVALID OPTION")
 	
 	
 	
