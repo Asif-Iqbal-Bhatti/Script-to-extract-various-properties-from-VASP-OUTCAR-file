@@ -4,14 +4,15 @@
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 #    Credit	: 	Asif Iqbal BHATTI
-#    CODE to: 	OBTAIN Elastic properties form OUTCAR files,
+#    CODE to: 	OBTAIN Elastic properties from OUTCAR file,
 #               compare POSCAR and CONTCAR volume deformation
 #               upon minimization, and extract energy from a number
-#				of directories.  
+#				of directories. extract lattice distortion  
 #    VERSION: 	This script runs with python3 or later
 #    FORMAT	:	POSCAR VASP5 format
 #    DATE	: 	28/12/2019
 #    USAGE	: 	python3 sys.argv[0]
+#	 VERSION:   4.0	
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 '''
@@ -98,7 +99,7 @@ def poscar():
 	print (">>>>>>>>>---------------Lattice vectors distortions-----------------")				
 	lattice = np.array([a] + [b] + [c])
 	#determinant = np.linalg.det(lattice)
-	lld = local_lattice_distortion(a,b,c)
+	lld = lattic_distortion.local_lattice_distortion(a,b,c)
 	print ("lattice distortion parameter g: {}".format(lld) )
 	
 	print (">>>>>>>>>---------------Space group-----------------")		
@@ -119,90 +120,92 @@ def poscar():
 	print ('||b||=%2f  \u03B2= %2f' %(np.linalg.norm(b), beta))
 	print ('||c||=%2f  \u03B3= %2f' %(np.linalg.norm(c), gamma))
 	print ('Vol= %4.8f A^3; %4.8f [a.u]^3' %(volume(a,b,c,math.radians(alpha),math.radians(beta),math.radians(gamma) )))			
-###
 
-def local_lattice_distortion(a1,b1,c1):
-	#print ("The lattice distortion in paracrystals is measured by the lattice distortion parameter g")
-	#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
-	#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
-	#print ("")
-	a=np.linalg.norm(a1); b=np.linalg.norm(b1); c=np.linalg.norm(c1)
-	d = np.array([a,b,c])
-	d_mean = np.mean(d); d_std = np.std(d)
-	d_square_mean = (a**2 + b**2 + c**2)/3
-	g = np.sqrt( d_square_mean/(d_mean)**2 - 1 )
-	return g
 ###
+class lattic_distortion():
+	@classmethod
+	def local_lattice_distortion(a1,b1,c1):
+		#print ("The lattice distortion in paracrystals is measured by the lattice distortion parameter g")
+		#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
+		#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
+		#print ("")
+		a=np.linalg.norm(a1); b=np.linalg.norm(b1); c=np.linalg.norm(c1)
+		d = np.array([a,b,c])
+		d_mean = np.mean(d); d_std = np.std(d)
+		d_square_mean = (a**2 + b**2 + c**2)/3
+		g = np.sqrt( d_square_mean/(d_mean)**2 - 1 )
+		return g
+	###
+	
+	def local_lattice_distortion_DEF1():
+		#print ("The lattice distortion in paracrystals is measured by the lattice distortion parameter g")
+		#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
+		#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
+		print ("+"*40,"HUME ROTHERY RULE","+"*40)
+		C_i=C=0.2 ; r_avg = 0.0; del_sum=0.0
+		elements = ["Nb", "Hf", "Ta", "Ti", "Zr"]
+		eta = {
+		"Nb" : 1.98,
+		"Hf" : 2.08,
+		"Ta" : 2.00,
+		"Ti" : 1.76,
+		"Zr" : 2.06, }
+		
+		print ("                      {element: atomic radius}")
+		print (eta)
+		
+		for i in elements: 
+			r_avg = r_avg + C * eta[i] 
+		
+		for j in elements:
+			del_sum = del_sum + C * ( 1 - float(eta[j]) / r_avg )
+		del_sum = 100 * np.sqrt(del_sum) 	
+		print("HEA_atomic_size_mismatch: \u03B4={}".format(del_sum))
+	###
+		
+	def local_lattice_distortion_DEF2():
+		print ("Song, H. et al. Local lattice distortion in high-entropy alloys.")
+		print ("Phys. Rev. Mater. 1, 23404 (2017).")
+		print ("_____| Different definition of the atomic radius for the description ")
+		print ("       of the local lattice distortion in HEAs")
+		
+		if not os.path.exists('POSCAR' and 'CONTCAR'):
+			print (' ERROR: POSCAR & CONTCAR does not exist')
+			sys.exit(0)
+		print('Reading POSCAR and CONTCAR ... \n')
+		
+		x = []; y =[]; z=[]
+		xp =[]; yp = []; zp = []; temp=0
+		
+		f = open('POSCAR','r')
+		lines_poscar = f.readlines()
+		f.close()
+		
+		f = open('CONTCAR','r')
+		lines_contcar = f.readlines()
+		f.close()
+		
+		sum_atoms = lines_poscar[6].split()  ### reading 7th lines for reading # of atoms
+		sum_atoms = [int(i) for i in sum_atoms]
+		sum_atoms = sum(sum_atoms)
+		
+		for i in lines_poscar:
+			if "Direct" in i:
+				lp=lines_poscar.index(i)
+		for j in lines_contcar:
+			if "Direct" in j:
+				lc=lines_contcar.index(j)
+				
+		for i in range(sum_atoms):
+			x, y, z    = lines_poscar[lp+1+i].split()
+			xp, yp, zp = lines_contcar[lp+1+i].split()
+			x = float(x); y = float(y); z = float(z)
+			xp = float(xp); yp = float(yp); zp = float(zp)
+			temp = temp + np.sqrt( (x-xp)**2 + (y-yp)**2 + (z-zp)**2 )
+		temp = temp/sum_atoms
+		print("local lattice distortion: \u0394d={}".format(temp))	
 
-def local_lattice_distortion_DEF1():
-	#print ("The lattice distortion in paracrystals is measured by the lattice distortion parameter g")
-	#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
-	#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
-	print ("+"*40,"HUME ROTHERY RULE","+"*40)
-	C_i=C=0.2 ; r_avg = 0.0; del_sum=0.0
-	elements = ["Nb", "Hf", "Ta", "Ti", "Zr"]
-	eta = {
-	"Nb" : 1.98,
-	"Hf" : 2.08,
-	"Ta" : 2.00,
-	"Ti" : 1.76,
-	"Zr" : 2.06, }
-	
-	print ("                      {element: atomic radius}")
-	print (eta)
-	
-	for i in elements: 
-		r_avg = r_avg + C * eta[i] 
-	
-	for j in elements:
-		del_sum = del_sum + C * ( 1 - float(eta[j]) / r_avg )
-	del_sum = 100 * np.sqrt(del_sum) 	
-	print("HEA_atomic_size_mismatch: \u03B4={}".format(del_sum))
 ###
-	
-def local_lattice_distortion_DEF2():
-	print ("Song, H. et al. Local lattice distortion in high-entropy alloys.")
-	print ("Phys. Rev. Mater. 1, 23404 (2017).")
-	print ("_____| Different definition of the atomic radius for the description ")
-	print ("       of the local lattice distortion in HEAs")
-	
-	if not os.path.exists('POSCAR' and 'CONTCAR'):
-		print (' ERROR: POSCAR & CONTCAR does not exist')
-		sys.exit(0)
-	print('Reading POSCAR and CONTCAR ... \n')
-	
-	x = []; y =[]; z=[]
-	xp =[]; yp = []; zp = []; temp=0
-	
-	f = open('POSCAR','r')
-	lines_poscar = f.readlines()
-	f.close()
-	
-	f = open('CONTCAR','r')
-	lines_contcar = f.readlines()
-	f.close()
-	
-	sum_atoms = lines_poscar[6].split()  ### reading 7th lines for reading # of atoms
-	sum_atoms = [int(i) for i in sum_atoms]
-	sum_atoms = sum(sum_atoms)
-	
-	for i in lines_poscar:
-		if "Direct" in i:
-			lp=lines_poscar.index(i)
-	for j in lines_contcar:
-		if "Direct" in j:
-			lc=lines_contcar.index(j)
-			
-	for i in range(sum_atoms):
-		x, y, z    = lines_poscar[lp+1+i].split()
-		xp, yp, zp = lines_contcar[lp+1+i].split()
-		x = float(x); y = float(y); z = float(z)
-		xp = float(xp); yp = float(yp); zp = float(zp)
-		temp = temp + np.sqrt( (x-xp)**2 + (y-yp)**2 + (z-zp)**2 )
-	temp = temp/sum_atoms
-	print("local lattice distortion: \u0394d={}".format(temp))	
-###
-
 def space_group_analyse(lattice, pos):
 	numbers = [1,2]			
 	cell = (lattice, pos, numbers)
@@ -376,7 +379,7 @@ def main_poscar():
 					ofile.write ("'b=' {}\n".format(b))
 					#print ('c=', c)
 					ofile.write ("'c=' {}\n".format(c))		
-					lld = local_lattice_distortion(a,b,c)
+					lld = lattic_distortion.local_lattice_distortion(a,b,c)
 ##########################---------------------------------------------------------
 		
 					alpha, beta, gamma = lattice_angles(a,b,c)
@@ -474,7 +477,7 @@ def main_contcar():
 					ofile.write ("'b=' {}\n".format(b))
 					#print ('c=', c)
 					ofile.write ("'c=' {}\n".format(c))		
-					lld = local_lattice_distortion(a,b,c)					
+					lld = lattic_distortion.local_lattice_distortion(a,b,c)					
 ##########################---------------------------------------------------------
 
 					alpha, beta, gamma = lattice_angles(a,b,c)
@@ -1114,11 +1117,17 @@ def mechanical_properties():
 
 ####
 def Introduction():
-	global message
-	message = "              ____| Python script to process various properties |____"
-	print(message)
 
-
+	print(colored('@'*80,'yellow'), end = '\n', flush=True)
+	print("Credit	:	Asif Iqbal BHATTI")
+	print("USAGE	:	Extract essential properties from VASP outputfiles.") 
+	print("VERSION	:	python3 or above ")
+	print("FORMAT	:	POSCAR VASP5 format                    ")
+	print("DATE	:	28/12/2019                             ")
+	print('USAGE	:	execute by typing python3 sys.argv[0]')
+	print("VERSION	:	4.0	                                   ")
+	print(colored('@'*80,'yellow'), end = '\n', flush=True)
+	print("              ____| Python script to process various properties |____")
 
 '''
 #####---------------------------------------------------------
@@ -1128,14 +1137,12 @@ def Introduction():
 
 ####
 if __name__ == "__main__":
-
+	
 	Introduction()
-	print(colored('@'*80,'yellow'), end = '\n', flush=True)
+
 	print("Number of processors Detected: ", mp.cpu_count())
 	print(Back.MAGENTA + ' NB: POSCAR should be in VASP 5 format & without selective dynamics', end = '\n', flush=True)
 	print(Style.RESET_ALL)	
-	print(colored('-'*80,'red'), end = '\n', flush=True)
-	print('>>> USAGE: execute by typing python3 sys.argv[0]')
 	print(colored('~'*80,'red'), end = '\n', flush=True)
 	print("**** Following are the options: ")
 	print(colored('-'*80,'red'), end = '\n', flush=True)
@@ -1146,50 +1153,54 @@ if __name__ == "__main__":
 	print("(04) To extract ELASTIC CONSTANTS from OUTCAR file (IBRION=6,ISIF=3)")
 	print("(05) To Fit energy vs volume curve to extract Elastic Moduli: B0 ... ")
 	print("(06) CONVERT POSCAR file from VASP4 to VASP5 format")
-	print("(07) Calculate manually Elastic constants by entering Cij values")
-	print("(08) Create directories for PHONON calculations generated with PHONOPY code")
-
+	print("(07) Calculate manually Elastic properties by entering Cij values (Energy-vs-Strain)")
+	print("(08) Calculate lattice distortion of the structure")
+	print("(09) Create directories for PHONON calculations generated with PHONOPY code")
+	
 	print (colored('~'*80,'red'), end = '\n', flush=True)
-	print (colored('*'*80,'red'), end = '\n', flush=True)
 
-	while True:
-		option = input("Enter the option as listed above: ")
-		option = int(option)
+	option = input("Enter the option as listed above: ")
+	option = int(option)
+	
+	if (option == 1):
+		poscar()
 		
-		if (option == 1):
-			poscar()
-			
-		elif (option == 2):
-			VOL_P = main_poscar()
-			VOL_C = main_contcar()
-			volume_diff(VOL_P, VOL_C)
-			
-		elif (option == 3):
-			create_energy_vs_volume()
-			
-		elif (option == 4):
-			print("OUTCAR should be in the same directory from which this script is run ")		
-			pool = mp.Pool(mp.cpu_count())
-			elastic_matrix_VASP_STRESS()
-			pool.close()
-			
-		elif (option == 5):
-			fitting_energy_vs_volume_curve_ELASTIC()
-			
-		elif (option == 6):
-			poscar_VASP42VASP5()	
-	
-		elif (option == 7):
-			mechanical_properties()
-	
-		elif (option == 8):
-			pass
+	elif (option == 2):
+		VOL_P = main_poscar()
+		VOL_C = main_contcar()
+		volume_diff(VOL_P, VOL_C)
 		
-		else:
-			print ("INVALID OPTION")
-	
-	
-	
-	
-	
-	
+	elif (option == 3):
+		create_energy_vs_volume()
+		
+	elif (option == 4):
+		print("OUTCAR should be in the same directory from which this script is run ")		
+		pool = mp.Pool(mp.cpu_count())
+		elastic_matrix_VASP_STRESS()
+		pool.close()
+		
+	elif (option == 5):
+		fitting_energy_vs_volume_curve_ELASTIC()
+		
+	elif (option == 6):
+		poscar_VASP42VASP5()	
+
+	elif (option == 7):
+		mechanical_properties()
+
+	elif (option == 8):
+		#lattic_distortion.local_lattice_distortion(a,b,c)
+		lattic_distortion.local_lattice_distortion_DEF1()
+		#lattic_distortion.local_lattice_distortion_DEF2()
+
+	elif (option == 9):
+		pass
+		
+	else:
+		print ("INVALID OPTION")
+
+
+
+
+
+
