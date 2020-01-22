@@ -136,7 +136,10 @@ class lattic_distortion():
 		g = np.sqrt( d_square_mean/(d_mean)**2 - 1 )
 		return g
 	###
-	
+# Song, H. et al. Local lattice distortion in high-entropy alloys. Phys. Rev. Mater. 1, 23404 (2017).
+# Senkov, O. N. & Miracle, D. B. Effect of the atomic size distribution on glass forming ability of amorphous metallic alloys. Mater. Res. Bull. 36, 2183–2198 (2001).
+# Takeuchi, A. et al. Entropies in alloy design for high-entropy and bulk glassy alloys. Entropy 15, 3810–3821 (2013).	
+
 	def local_lattice_distortion_DEF1():
 		#print ("The lattice distortion in paracrystals is measured by the lattice distortion parameter g")
 		#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
@@ -158,7 +161,7 @@ class lattic_distortion():
 			r_avg = r_avg + C * eta[i] 
 		
 		for j in elements:
-			del_sum = del_sum + C * ( 1 - float(eta[j]) / r_avg )
+			del_sum = del_sum + C * ( 1 - float(eta[j]) / r_avg )**2
 		del_sum = 100 * np.sqrt(del_sum) 	
 		print("HEA_atomic_size_mismatch: \u03B4={}".format(del_sum))
 	###
