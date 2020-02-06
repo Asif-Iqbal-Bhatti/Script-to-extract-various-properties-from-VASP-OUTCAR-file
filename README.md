@@ -26,7 +26,7 @@ _______________________
 _For VASP structural minimization these tag should be used: IBRION = 2; ISIF = 3; EDIFF= 10**-8. VASP has implemented the stress method (First derivative approach) and with few deformation it gives the Stiffness Constants directly. However as the system size gets larger then it becomes very expensive to compute. The other appraoch is the Energy-strain method where Langragian strain are applied to the cell and the resulting energy is calculated for a number of deformations. After this polynomial fitting is done and second derivative is calculated at equilibrium volume._
 
 ```
-An excercise to print Cij matrix in a pythonic way
+An excercise to print Cij matrix in a pythonic way: 2D array is created as List of Lists unlike C++ where you define by C[i][j]
 
 def print_Cij_Matrix():
 	Bij = []
