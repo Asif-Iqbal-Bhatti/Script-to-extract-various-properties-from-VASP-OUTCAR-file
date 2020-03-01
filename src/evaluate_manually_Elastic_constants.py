@@ -8,6 +8,7 @@
 # Equations can be found at Golesorkhtabar, R., Pavone, P., Spitaler, J., 
 # Puschnig, P. & Draxl, C. ElaStic: A tool for calculating second-order elastic 
 # constants from first principles. Comput. Phys. Commun. 184, 1861–1873 (2013).
+  OR http://wolf.ifj.edu.pl/elastic/index.html 
 '''
 
 import numpy as np
@@ -25,38 +26,39 @@ def mechanical_properties():
 
 	########################## INPUT PARAMETERS ################################
 	
-	c11=c22=c33=127.51 ; 
-	c44= 77.06/3 
-	B= 116.11
-	c12=c21=c13=c31=c23=c32=(1/6) * (9 * B - 3 * c11)
-	#c12=c21=c13=c31=c23=c32=80.86
-	
+	c11=c22=c33=147.86 ; 
+	c44=c55=c66= 28
+	B= 116
+	#c12=c21=c13=c31=c23=c32=(1/6) * (9 * B - 3 * c11)
+	c12=c21=c13=c31=c23=c32=110
+	c14=c15=c16=c24=c25=c26=c34=c35=c36=0
+	c45=c46=c56=0
 	################################################################################
-	print ("-"*100)
+	print ("-"*40)
 	print ("The STIFNESS MATRIX Cij is:", end=("\n"))
-	Cij=[   [c11,c12,c13,0,0,0], 
-			[c21,c22,c23,0,0,0], 
-			[c31,c32,c33,0,0,0],
-			[0,0,0,c44,0,0],
-			[0,0,0,0,c44,0],
-			[0,0,0,0,0,c44]]
+	Cij=[   [c11,c12,c13,c14,c15,c16], 
+			    [c21,c22,c23,c24,c25,c26], 
+			    [c31,c32,c33,c34,c35,c36],
+			    [0,0,0      ,c44,c45,c46],
+			    [0,0,0      ,0,c55,c56  ],
+			    [0,0,0      ,0,0,c66    ]]
 	Cij=np.matrix(Cij)
 	Cij=np.matrix(Cij).reshape((6,6))
 	
 	print (Cij)
 	evals, eigenvec = LA.eig(Cij)
-	print ("-"*100)
+	print ("-"*40)
 	print("The Eigenvalues are: ", evals)
 	#print("The Eigenvectors are: ")
 	#print(eigenvec)
-	print ("-"*100)
+	print ("-"*40)
 	# ### Compliance tensor  s_{ij}$ $(GPa^{-1})$
 	#  s_{ij} = C_{ij}^{-1}$
-	print ("-"*100)
+	print ("-"*40)
 	print ("The COMPLIANCE MATRIX Sij is:", end=("\n"))
 	Sij = np.linalg.inv(Cij)
 	print (Sij)
-	print ("-"*100)
+	print ("-"*40)
 	
 	# Voigt bulk modulus  K_v  $(GPa)$
 	# 9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
@@ -87,7 +89,7 @@ def mechanical_properties():
 	Er = (9*Br*Gr)/(3*Br + Gr)
 	##################################################################################
 	print ("{:30.8s} {:20.8s} {:20.8s} {:20.8s}".format(" ","Voigt", "Reuss ", "Hill") )
-	print ("-"*100)
+	print ("-"*80)
 	# #Hill bulk modulus  K_{VRH}$ $(GPa)$
 	#  K_{VRH} = (K_R + K_v)/2 
 	B_H = (Bv + Br)/2
@@ -111,17 +113,20 @@ def mechanical_properties():
 	print ("{:12.20s} {:20.6f} {:20.6f} {:20.6f}".format("Shear Modulus(GPa)",Gv, Gr, G_H) )
 	print ("{:12.20s} {:20.6f} {:20.6f} {:20.6f}".format("Young Modulus(GPa)",Ev, Er, E_H) )
 	print ("{:18.20s} {:20.6f} {:20.6f} {:20.6f}".format("Poisson ratio ", NuV, NuR, nu_H) )
+	print ("{:18.20s} {:20.6s} {:20.6s} {:20.6f}".format("B/G ratio ",'','', B_H/G_H) )
+	print ("{:18.20s} {:20.6s} {:20.6s} {:20.6f}".format("Avr ratio ",'','', (Gv-Gr)/(Gv+Gr)) )
+	print ("{:18.20s} {:20.6s} {:20.6s} {:20.6f}".format("Zener ratio ",'','', 2*(c44)/(c11-c12)) )
+	print ("{:18.20s} {:20.6s} {:20.6s} {:20.6f}".format("Cauchy pressure ",'','', (c12-c44)) )
+	print ("{:18.20s} {:20.6s} {:20.6s} {:20.6f}".format("C'tet Shear Modulus ",'','', (c11-c12)/2) )
 	
-	print ("-"*100)
+	print ("-"*50)
 
-
-###########
-
+############	
 def local_lattice_distortion_DEF1():
 	#print ("The lattice distortion in paracrystals is measured by the lattice distortion parameter g")
 	#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
 	#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
-	print ("+"*40,"HUME ROTHERY RULE","+"*40)
+	print (">"*10,"HUME ROTHERY RULE")
 	C_i=C=0.2 ; r_avg = 0.0; del_sum=0.0
 	elements = ["Nb", "Hf", "Ta", "Ti", "Zr"]
 	eta = {
@@ -131,26 +136,27 @@ def local_lattice_distortion_DEF1():
 	"Ti" : 1.76,
 	"Zr" : 2.06, }
 	
-	print ("                      {element: atomic radius}")
+	print ("	{element: atomic radius}")
 	print (eta)
 	
 	for i in elements: 
 		r_avg = r_avg + C * eta[i] 
 	
 	for j in elements:
-		del_sum = del_sum + C * ( 1 - float(eta[j]) / r_avg )
+		del_sum = del_sum + C * ( 1 - float(eta[j]) / r_avg )**2
 	del_sum = 100 * np.sqrt(del_sum) 	
 	print("HEA_atomic_size_mismatch: \u03B4={}".format(del_sum))
-###
-	
+
+############
 def local_lattice_distortion_DEF2():
-	print ("Song, H. et al. Local lattice distortion in high-entropy alloys.")
-	print ("Phys. Rev. Mater. 1, 23404 (2017).")
-	print ("_____| Different definition of the atomic radius for the description ")
-	print ("       of the local lattice distortion in HEAs")
+	print (">"*10,"local_lattice_distortion_DEF2")
+	print ("	Song, H. et al. Local lattice distortion in high-entropy alloys.")
+	print ("	Phys. Rev. Mater. 1, 23404 (2017).")
+	print ("	(***) Different definition of the atomic radius for the description ")
+	print ("	of the local lattice distortion in HEAs")
 	
 	if not os.path.exists('POSCAR' and 'CONTCAR'):
-		print (' ERROR: POSCAR & CONTCAR does not exist (Both should be in the same directory)')
+		print ('>>> ERROR: POSCAR & CONTCAR does not exist (Both should be in the same directory)')
 		sys.exit(0)
 	print('Reading POSCAR and CONTCAR ... \n')
 	
@@ -188,13 +194,12 @@ def local_lattice_distortion_DEF2():
 if __name__ == "__main__":	
 
 	mechanical_properties()
-	print ("+"*45,"HEA","+"*45)
-	print ("-"*100)
+	
+	
+	print ("")
+	print ("_"*30,"Lattice Distortion Analysis","_"*30)
 	local_lattice_distortion_DEF1()
-	print ("-"*100)
+	print ("")
 	local_lattice_distortion_DEF2()
 	
-	
-	
-
 
