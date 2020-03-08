@@ -16,6 +16,7 @@ import numpy as np
 import math, scipy, os, sys
 from numpy import linalg as LA
 import statistics as st
+import ase.io
 
 np.set_printoptions(precision=3)
 CRED = '\033[91m';CEND = '\033[0m'
@@ -31,11 +32,11 @@ def mechanical_properties():
 
 	########################## INPUT PARAMETERS assuming cubic #######################
 	
-	c11=c22=c33=154 ; 
-	c44=c55=c66= 50
-	B = 123
-	c12=c21=c13=c31=c23=c32=(1/6) * (9 * B - 3 * c11)
-	#c12=c21=c13=c31=c23=c32=110
+	c11=c22=c33=123.22 ; 
+	c44=c55=c66=47
+	B = 120
+	#c12=c21=c13=c31=c23=c32=(1/6) * (9 * B - 3 * c11)
+	c12=c21=c13=c31=c23=c32=94.22
 	c14=c15=c16=c24=c25=c26=c34=c35=c36=0
 	c45=c46=c56=0
 	################################################################################
@@ -243,6 +244,14 @@ def local_lattice_distortion_DEF2():
 	lines_contcar = f.readlines()
 	f.close()
 	
+	file_P = ase.io.read('POSCAR')
+	pos = file_P.get_cell_lengths_and_angles()
+	print (CRED + "POSCAR=>Length&Angles->{}".format(pos) + CEND)
+	file_C = ase.io.read('CONTCAR')
+	con = file_C.get_cell_lengths_and_angles() 
+	print (CRED + "CONTCAR=>Length&Angles->{}".format(con) + CEND)
+	print ("Cell vectors difference:: ",con-pos)
+	
 	sum_atoms = lines_poscar[6].split()  ### reading 7th lines for reading # of atoms
 	sum_atoms = [int(i) for i in sum_atoms]
 	sum_atoms = sum(sum_atoms)
@@ -256,12 +265,12 @@ def local_lattice_distortion_DEF2():
 			
 	for i in range(sum_atoms):
 		x, y, z    = lines_poscar[lp+1+i].split()
-		xp, yp, zp = lines_contcar[lp+1+i].split()
+		xc, yc, zc = lines_contcar[lp+1+i].split()
 		x = float(x); y = float(y); z = float(z)
-		xp = float(xp); yp = float(yp); zp = float(zp)
-		temp = temp + np.sqrt( (x-xp)**2 + (y-yp)**2 + (z-zp)**2 )
+		xc = float(xc); yc = float(yc); zc = float(zc)
+		temp = temp + np.sqrt( (x-xc)**2 + (y-yc)**2 + (z-zc)**2 )
 	temp = temp/sum_atoms
-	print("local lattice distortion: \u0394d={}".format(temp))		
+	print("local lattice distortion (LLD): \u0394d={}".format(temp))		
 
 if __name__ == "__main__":	
 
