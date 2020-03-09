@@ -86,63 +86,97 @@ def elastic_matrix_VASP_STRESS():
 
 		stability_test(Cij, crystaltype)
 		
-#------------------------------- Voigt bulk modulus  K_v  $(GPa)$---------------
-#------------------ 9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
-		Kv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0]))/9.0
-#------------------------------- Reuss shear modulus  G_v  $(GPa)$------------------
-#------------------ 15/G_R = 4(s_{11}+s_{22}+s_{33}) - 4(s_{12} + s_{23} + s_{31}) + 3(s_{44} + s_{55} + s_{66})$
-		Gv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) - (Cij[0,1] + Cij[1,2] + Cij[2,0]) + 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0
-#------------------------------- Reuss bulk modulus  K_r  $(GPa)$----------------
-#------------------  1/K_R = (s_{11}+s_{22}+s_{33}) + 2(s_{12} + s_{23} + s_{31})$
-		Kr = 1/((Sij[0,0] + Sij[1,1] + Sij[2,2]) + 2 * (Sij[0,1] + Sij[1,2] + Sij[2,0]) )
-#------------------------------- Reuss shear modulus  G_r  $(GPa)$------------------
-		Gr = 15/(4 * (Sij[0,0] + Sij[1,1] + Sij[2,2]) - 4 * (Sij[0,1] + Sij[1,2] + Sij[2,0]) + 3 * (Sij[3,3] + Sij[4,4] + Sij[5,5]))
+######## -----------------------------VOIGT-------------------------------
+  
+	'''Voigt bulk modulus  (GPa)'''
+	
+	#9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
+	Bv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0])) / 9.0
+	
+	'''Voigt shear modulus  (GPa)'''
+	
+	#15*G_v = (C_{11}+C_{22}+C_{33}) - (C_{12} + C_{23} + C_{31}) + 3(C_{44} + C_{55} + C_{66})$
+	Gv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) - (Cij[0,1] + Cij[1,2] + Cij[2,0]) 
+	+ 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0
+	
+	## Young's: Voigt
+	Ev = (9*Bv*Gv)/(3*Bv + Gv)
 		
-#-----------------------------------------------------------------------------------
+	## Poisson's ratio: Voigt
+	NuV = (3*Bv - Ev)/(6*Bv)
+	
+	######## -----------------------------REUSS-------------------------------
+	
+	# Reuss bulk modulus  K_R  $(GPa)$
+	#  1/K_R = (s_{11}+s_{22}+s_{33}) + 2(s_{12} + s_{23} + s_{31})$
+	Br = 1/((Sij[0,0] + Sij[1,1] + Sij[2,2]) + 2*(Sij[0,1] + Sij[1,2] + Sij[2,0])) 
+	
+	# Reuss shear modulus  G_v  $(GPa)$
+	# 15/G_R = 4*(s_{11}+s_{22}+s_{33}) - 4*(s_{12} + s_{23} + s_{31}) + 3(s_{44} + s_{55} + s_{66})$
+	Gr = (4 * (Sij[0,0] + Sij[1,1] + Sij[2,2]) - 4*(Sij[0,1] + Sij[1,2] + Sij[2,0]) 
+	+ 3 * (Sij[3,3] + Sij[4,4] + Sij[5,5]))
+	Gr = 15.0/Gr
+	
+	## Young's: Reuss
+	Er = (9*Br*Gr)/(3*Br + Gr)	
+	
+	## Poisson's ratio: Reuss
+	NuR = (3*Br - Er)/(6*Br)
 
-		## Young's Modulus "E": Voigt
-		Ev = (9*Kv*Gv)/(3*Kv + Gv)				
-		## Young's: Reuss
-		Er = (9*Kr*Gr)/(3*Kr + Gr)		
-		
-		## Poisson's ratio: Voigt
-		Nu_V = (3*Kv - Ev)/(6*Kv)				
-	       ## Poisson's ratio: Reuss
-		Nu_R = (3*Kr - Er)/(6*Kr)
-		
-		## P-wave modulus, M: Voigt
-		MV = Kv + (4*Gv/3.0)	        
-	       ## P-wave modulus, M: Reuss
-		MR = Kr + (4*Gr/3.0)	
-			
-#-----------------------------------------------------------------------------------
-#-------------- Voigt-Reuss-Hill Approximation: average of both methods
-		Kvrh = (Kv + Kr)/2.0
-		Gvrh = (Gv + Gr)/2.0
-		Mvrh = (MV + MR)/2.0
-		Evrh = (Ev + Er)/2.0
-		Nu_vrh = (Nu_V + Nu_R)/2.0
-		KG_ratio_V = Kv/Gv
-		KG_ratio_R = Kr/Gr
-		KG_ratio_vrh = Kvrh/Gvrh			
-#-------------- Isotropic Poisson ratio $\mu 
-#-------------- $\mu = (3K_{vrh} - 2G_{vrh})/(6K_{vrh} + 2G_{vrh})$
-		mu = (3 * Kvrh - 2 * Gvrh) / (6 * Kvrh + 2 * Gvrh )
-		
-#----------------------------------------------------------------------
-#-----------------------------------------------------------------------------------
-		
-		print ("\n \n                         Voigt     Reuss    Average")
-		print ("-------------------------------------------------------")
-		print ("Bulk modulus   (GPa)  %9.3f %9.3f %9.3f " % (Kv, Kr, Kvrh))
-		print ("Shear modulus  (GPa)  %9.3f %9.3f %9.3f " % (Gv, Gr, Gvrh))
-		print ("Young modulus  (GPa)  %9.3f %9.3f %9.3f " % (Ev, Er, Evrh))
-		print ("Poisson ratio         %9.3f %9.3f %9.3f " % (Nu_V, Nu_R, Nu_vrh))
-		print ("P-wave modulus  (GPa) %9.3f %9.3f %9.3f " % (MV, MR, Mvrh))
-		print ("Bulk/Shear ratio      %9.3f %9.3f %9.3f (%s) " %(KG_ratio_V, KG_ratio_R, KG_ratio_vrh,  ductile_test(KG_ratio_vrh) ))
-		print ("-------------------------------------------------------")
-		print("Isotropic Poisson ratio: ", mu)			
-		break
+	##########################################################################
+
+	######## -----------------------------Averages-------------------------------
+	
+	# #Hill bulk modulus  K_{VRH}$ $(GPa)$
+	#  K_{VRH} = (K_R + K_v)/2 
+	B_H = (Bv + Br)/2
+	#print ("VRH bulk modulus  (GPa): %20.8f " %(B_H) )
+	
+	# Hill shear modulus  G_{VRH}$ $(GPa)$
+	#  G_{VRH} = (G_R + G_v)/2 
+	G_H = (Gv + Gr)/2
+	#print ("VRH shear modulus (GPa): %20.8f " %(G_H) )
+	
+	# Young modulus E = 9BG/(3B+G)
+	#E_H = (9 * B_H * G_H) / (3 * B_H + G_H)
+	E_H = (Ev + Er)/2
+	#print ("Young modulus E : {:1.8s} {:20.8f}".format(" ",E_H) )
+	
+	# ### Isotropic Poisson ratio $\mu 
+	# $\mu = (3K_{VRH} - 2G_{VRH})/(6K_{VRH} + 2G_{VRH})$
+	#nu_H = (3 * B_H - 2 * G_H) / (6 * B_H + 2 * G_H )
+	nu_H = (NuV + NuR) / 2
+	#print ("Isotropic Poisson ratio: {:15.8f} ".format(nu_H) )
+	
+	## Elastic Anisotropy
+	## Zener anisotropy for cubic crystals only
+	A = 2*(c44)/(c11-c12)
+	
+	# Universal Elastic Anisotropy AU
+	AU = (Bv/Br) + 5*(Gv/Gr) - 6.0
+	
+	# C' tetragonal shear modulus
+	C = (c11-c12)/2
+	
+	ratio_V = Bv/Gv
+	ratio_R = Br/Gr
+	print ("{:_^80}".format("GPa"))	
+	print ("{:25.8s}  {:15.8s} {:15.8s} {:15.8s}".format(" ","Voigt", "Reuss ", "Hill") )	
+	print ("{:16.20s} {:15.3f} {:15.3f} {:15.3f}".format("Bulk Modulus",Bv, Br, B_H) )
+	print ("{:16.20s} {:15.3f} {:15.3f} {:15.3f}".format("Shear Modulus",Gv, Gr, G_H) )
+	print ("{:16.20s} {:15.3f} {:15.3f} {:15.3f}".format("Young Modulus",Ev, Er, E_H) )
+	print ("{:-^80}".format("-"))	
+	print ("{:16.20s} {:15.3f} {:15.3f} {:15.3f}".format("Poisson ratio ", NuV, NuR, nu_H) )
+	print ("{:16.20s} {:15.3f} {:15.3f} {:15.3f}({:5.3f})".format("B/G ratio ",Bv/Gv,Br/Gr, B_H/G_H, G_H/B_H) )
+	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("Zener ratio Az",'','', A) )	
+	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("Avr ratio ",'','', (Gv-Gr)/(Gv+Gr)) )
+	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("AU ",'','', AU) )
+	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("Cauchy pressure ",'','', (c12-c44)) )
+	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("C'tetra Shear ",'','',  C) )
+	
+	print ("-"*80)
+	return Sij
+	
 		
 		
 def ductile_test(ratio):
