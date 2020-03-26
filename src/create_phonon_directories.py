@@ -18,9 +18,9 @@ import 	fnmatch
 import 	time
 
 #_____________________________________________________________________________
-
-#os.system("phonopy -d --dim="2 2 2") ## It will call a phonopy code
 os.system('rm -r disp-*')
+#os.system('phonopy -d --dim="2 2 2"') ## It will call a phonopy code
+#subprocess.call(['phonopy','-v', '-d', '--dim=3 3 3'],shell = False) ## It will call a phonopy code
 #_____________________________________________________________________________
 
 
@@ -38,10 +38,11 @@ def copy_fntn(k):
 		os.system('cp INCAR   disp-'+str(i).zfill(3) )
 		os.system('cp POTCAR  disp-'+str(i).zfill(3) )
 		os.system('cp KPOINTS disp-'+str(i).zfill(3) )
-		os.system('cp job.sh  disp-'+str(i).zfill(3) )
+		#os.system('cp job.sh  disp-'+str(i).zfill(3) )
+		#os.system('cp WAVECAR  disp-'+str(i).zfill(3) )
 		subprocess.call(['cp','-r','POSCAR-'+str(i).zfill(3),'disp-'+str(i).zfill(3)], shell = False)
 		os.chdir('disp-'+str(i).zfill(3))
-		shutil.copyfile("POSCAR-"+str(i).zfill(3), "POSCAR-"+str(i).zfill(3)+"-disp")
+		shutil.copyfile("POSCAR-"+str(i).zfill(3), "POSCAR")
 		#os.system('ls')
 		os.chdir('../')
 
@@ -71,4 +72,9 @@ def create_phonon_directories():
 		with pool as p:
 			p.map(copy_fntn, [counter])
 	end_time = time.time()
-	print("total time taken this loop: ", end_time - start_time)
+	print("total time taken for this loop: ", end_time - start_time)
+	
+if __name__ == "__main__":	
+		create_phonon_directories()
+		
+		
