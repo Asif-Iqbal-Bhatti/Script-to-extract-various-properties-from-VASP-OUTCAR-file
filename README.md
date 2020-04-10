@@ -6,7 +6,7 @@
 ![versions](https://img.shields.io/pypi/pyversions/pybadges.svg)
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
 
-
+==> supercell.py script construct bcc/fcc supercell for High Entropy Alloys <==
 If you have performed a number of calculations and want to obtain the lattice parameters, energy and volume from each directory (in a given directory) then run this script and it will loop over all the directories and find POSCAR file and output the lattice parameters, energy and volume, moreover it also scans the CONTCAR file and compute the volume and lattice parameters, and print on the screen volume difference upon structure minimization. 
 For Elastic constants this gives an indication how much the cell has deformed and gives us the indication whether we need to increase ENCUT or KPOINTS to minimize the Pulay stress as indicated on VASP manual.
 
