@@ -61,7 +61,7 @@ def HEAs_supercell():
 		u = np.cross(lattice_vector[1]*supercelly, lattice_vector[2]*supercellz)
 		v = np.cross(lattice_vector[0]*supercellx, lattice_vector[2]*supercellz)
 		w = np.cross(lattice_vector[0]*supercellx, lattice_vector[1]*supercelly)
-		#V = np.array([ lattice_vector[0]*supercelly,lattice_vector[1]*supercelly,lattice_vector[2]*supercellz ] )
+		#V = np.array([ lattice_vector[0]*supercellx,lattice_vector[1]*supercelly,lattice_vector[2]*supercellz ] )
 		#print ("Volume of the cell::", LA.det(V) )
 		Vx = np.inner(lattice_vector[0]*supercellx,u)
 		Vy = np.inner(lattice_vector[1]*supercelly,v)
