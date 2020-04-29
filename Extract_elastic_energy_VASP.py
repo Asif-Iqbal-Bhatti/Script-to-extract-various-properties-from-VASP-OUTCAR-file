@@ -3,16 +3,16 @@
 '''
 #####---------------------------------------------------------
 #####---------------------------------------------------------
-#    Credit	: 	Asif Iqbal BHATTI
+#    Credit	:Asif Iqbal BHATTI
 #    CODE to: 	OBTAIN Elastic properties from OUTCAR file,
 #               compare POSCAR and CONTCAR volume deformation
 #               upon minimization, and extract energy from a number
-#				of directories. extract lattice distortion  
+#		of directories. extract lattice distortion  
 #    VERSION: 	This script runs with python3 or later
-#    FORMAT	:	POSCAR VASP5 format
-#    DATE	: 	28/12/2019
-#    USAGE	: 	python3 sys.argv[0]
-#	 VERSION:   4.0	
+#    FORMAT	:POSCAR VASP5 format
+#    DATE	:28/12/2019
+#    USAGE	:python3 sys.argv[0]
+#    VERSION:   4.0	
 #####---------------------------------------------------------
 #####---------------------------------------------------------
 '''
