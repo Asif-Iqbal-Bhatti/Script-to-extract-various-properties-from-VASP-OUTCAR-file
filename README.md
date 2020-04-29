@@ -45,5 +45,25 @@ ref: [materialsproject](https://wiki.materialsproject.org/Elasticity_calculation
 
 [![licensebuttons by-nd](https://licensebuttons.net/l/by-nd/3.0/88x31.png)](https://creativecommons.org/licenses/by-nd/4.0)
 
+**Parsing Hessian matrix from a file**
+
+Script to parse Hessian Matrix from a file
+
+USAGE : To parse VASP vasprun.xml input file to extract Hessian Matrix Output file has already been defined in the code (hessian.dat).
+
+CAUTION: Use at your own risk (NOTEVEN IMPLIED GUARANTEED, WHATSOEVER), the code has been tested but the user in the end will have to verify the ouput.
+
+Xpath is useful tool for directly accessing the element in a Node
+
+-> CHECK this website for lxml introduccion: https://lxml.de/tutorial.html & -> https://github.com/lxml/lxml
+
+NB: The Matrix is obtained from VASP, vasprun.xml file. It contians the hessian matrix that can be edited with appropriate script.
+
+The complication that arises by parsing the data from the file is the trailing empty lines and tabs that need to be deleted before it can be read. In the case of a simple file format, there is no need for it. But if the file contains irregular data entry such as empty lines with commas and spaces then it needs to be formatted.
+
+In my case, I have only leading empty lines and spaces and in between columns there are white spaces of different sizes.
+
+
+
 𝗢𝗻𝗲 𝗳𝗶𝗲𝗹𝗱 𝗼𝗳 𝘄𝗼𝗿𝗸 𝗶𝗻 𝘄𝗵𝗶𝗰𝗵 𝘁𝗵𝗲𝗿𝗲 𝗵𝗮𝘀 𝗯𝗲𝗲𝗻 𝘁𝗼𝗼 𝗺𝘂𝗰𝗵 𝘀𝗽𝗲𝗰𝘂𝗹𝗮𝘁𝗶𝗼𝗻 𝗶𝘀 𝗰𝗼𝘀𝗺𝗼𝗹𝗼𝗴𝘆. 𝗧𝗵𝗲𝗿𝗲 𝗮𝗿𝗲 𝘃𝗲𝗿𝘆 𝗳𝗲𝘄 𝗵𝗮𝗿𝗱 𝗳𝗮𝗰𝘁𝘀 𝘁𝗼 𝗴𝗼 𝗼𝗻, 𝗯𝘂𝘁 𝘁𝗵𝗲𝗼𝗿𝗲𝘁𝗶𝗰𝗮𝗹 𝘄𝗼𝗿𝗸𝗲𝗿𝘀 𝗵𝗮𝘃𝗲 𝗯𝗲𝗲𝗻 𝗯𝘂𝘀𝘆 𝗰𝗼𝗻𝘀𝘁𝗿𝘂𝗰𝘁𝗶𝗻𝗴 𝘃𝗮𝗿𝗶𝗼𝘂𝘀 𝗺𝗼𝗱𝗲𝗹𝘀 𝗳𝗼𝗿 𝘁𝗵𝗲 𝗨𝗻𝗶𝘃𝗲𝗿𝘀𝗲, 𝗯𝗮𝘀𝗲𝗱 𝗼𝗻 𝗮𝗻𝘆 𝗮𝘀𝘀𝘂𝗺𝗽𝘁𝗶𝗼𝗻𝘀 𝘁𝗵𝗮𝘁 𝘁𝗵𝗲𝘆 𝗳𝗮𝗻𝗰𝘆. 𝗧𝗵𝗲𝘀𝗲 𝗺𝗼𝗱𝗲𝗹𝘀 𝗮𝗿𝗲 𝗽𝗿𝗼𝗯𝗮𝗯𝗹𝘆 𝗮𝗹𝗹 𝘄𝗿𝗼𝗻𝗴. 𝗜𝘁 𝗶𝘀 𝘂𝘀𝘂𝗮𝗹𝗹𝘆 𝗮𝘀𝘀𝘂𝗺𝗲𝗱 𝘁𝗵𝗮𝘁 𝘁𝗵𝗲 𝗹𝗮𝘄𝘀 𝗼𝗳 𝗻𝗮𝘁𝘂𝗿𝗲 𝗵𝗮𝘃𝗲 𝗮𝗹𝘄𝗮𝘆𝘀 𝗯𝗲𝗲𝗻 𝘁𝗵𝗲 𝘀𝗮𝗺𝗲 𝗮𝘀 𝘁𝗵𝗲𝘆 𝗮𝗿𝗲 𝗻𝗼𝘄. 𝗧𝗵𝗲𝗿𝗲 𝗶𝘀 𝗻𝗼 𝗷𝘂𝘀𝘁𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻 𝗳𝗼𝗿 𝘁𝗵𝗶𝘀. 𝗧𝗵𝗲 𝗹𝗮𝘄𝘀 𝗺𝗮𝘆 𝗯𝗲 𝗰𝗵𝗮𝗻𝗴𝗶𝗻𝗴, 𝗮𝗻𝗱 𝗶𝗻 𝗽𝗮𝗿𝘁𝗶𝗰𝘂𝗹𝗮𝗿, 𝗾𝘂𝗮𝗻𝘁𝗶𝘁𝗶𝗲𝘀 𝘁𝗵𝗮𝘁 𝗮𝗿𝗲 𝗰𝗼𝗻𝘀𝗶𝗱𝗲𝗿𝗲𝗱 𝘁𝗼 𝗯𝗲 𝗰𝗼𝗻𝘀𝘁𝗮𝗻𝘁𝘀 𝗼𝗳 𝗻𝗮𝘁𝘂𝗿𝗲 𝗺𝗮𝘆 𝗯𝗲 𝘃𝗮𝗿𝘆𝗶𝗻𝗴 𝘄𝗶𝘁𝗵 𝗰𝗼𝘀𝗺𝗼𝗹𝗼𝗴𝗶𝗰𝗮𝗹 𝘁𝗶𝗺𝗲. 𝗦𝘂𝗰𝗵 𝘃𝗮𝗿𝗶𝗮𝘁𝗶𝗼𝗻𝘀 𝘄𝗼𝘂𝗹𝗱 𝗰𝗼𝗺𝗽𝗹𝗲𝘁𝗲𝗹𝘆 𝘂𝗽𝘀𝗲𝘁 𝘁𝗵𝗲 𝗺𝗼𝗱𝗲𝗹 𝗺𝗮𝗸𝗲𝗿𝘀." 𝗗𝗶𝗿𝗮𝗰, 𝗣𝗮𝘂𝗹. 𝗢𝗻 𝗺𝗲𝘁𝗵𝗼𝗱𝘀 𝗶𝗻 𝘁𝗵𝗲𝗼𝗿𝗲𝘁𝗶𝗰𝗮𝗹 𝗽𝗵𝘆𝘀𝗶𝗰𝘀. (𝗧𝗿𝗶𝗲𝘀𝘁𝗲. 𝗝𝘂𝗻𝗲 𝟭𝟵𝟲𝟴 .) 
 
