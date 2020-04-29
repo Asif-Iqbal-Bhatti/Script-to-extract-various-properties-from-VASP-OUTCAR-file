@@ -6,7 +6,7 @@ import sys, random
 from numpy import linalg as LA
 
 #------------------------------INPUT PARAMETRS------------------------------------#
-lattice_parameter = 3.405 
+lattice_parameter = 3.405 # experimental length in angstrom
 supercellx = 5
 supercelly = 5
 supercellz = 5
