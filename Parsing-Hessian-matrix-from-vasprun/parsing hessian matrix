@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import os, sys, subprocess
+from scipy import linalg as LA
+import matplotlib.pyplot as plt
+
+''' The complication that arises by parsing the data from the file is the trailing empty lines and tabs that need to be deleted before it can be read. In the case of a simple file format, there is no need for it. But if the file contains irregular data entry such as empty lines with commas and spaces then it needs to be formatted. 
+In my case, I have only leading empty lines and spaces and in between columns there are white spaces of different sizes.
+'''
+
+filename = sys.argv[1]
+#########################################################################
+#os.system(' grep "\S" input.txt')
+#os.system(" sed -e '/^\s*$/d' input.txt ")
+#os.system(" sed -i '/^[[:space:]]*$/d' $filename ")
+subprocess.call(['sed','-i','/^[[:space:]]*$/d',sys.argv[1]], shell = False)
+#########################################################################
+
+#---------------------------------'''METHOD 1'''  
+
+#a = np.loadtxt("new.dat")
+#print(a)
+
+#---------------------------------'''METHOD 2'''  
+
+a = []
+f = open(filename, 'r')
+
+for line in f.readlines():
+	a.append([])
+	for i in line.strip().split():
+		a[-1].append(float(i))
+#print (a)
+
+f.close()
+#------------------------------------------------------------------------
+#a = np.random.random((900, 900))	
+s = np.shape(a); print('size of a Matrix', s)
+a = np.matrix(a)
+#print(a)
+
+print ('--------------------------------EIG VAL AND EIG VECTORS ARE:')
+
+w, v = LA.eigh(a)
+
+print (w);
+print (v)
