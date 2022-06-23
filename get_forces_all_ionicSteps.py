@@ -4,25 +4,24 @@
 # *****************************************************************************
 #   USAGE :: python3 grad2.py
 #   AUTHOR:: ADAPTATION OF Peter Larsson script to new version
-#   https://www.nsc.liu.se/~pla/vasptools/
+#            please see => https://www.nsc.liu.se/~pla/vasptools/
+#   ABOUT THE PROGRAM:
+#	     It prints out the forces at each ionic steps during simulation
 # *****************************************************************************
 '''
 
 import subprocess
-import os
-import sys
-import math
-import re
-from optparse import OptionParser
+import os, sys, re
+import numpy as np
+from tqdm import tqdm
+from ase.db import connect
 
-ini_path = os.getcwd()
-
-def get_number_of_atoms(where):
-  return int(subprocess.Popen('grep "NIONS" ' + where, stdout=subprocess.PIPE, shell=True).communicate()[0].split()[11])
+def get_number_of_atoms(out_car):
+  return int(subprocess.Popen('grep "NIONS" ' + out_car, stdout=subprocess.PIPE, shell=True).communicate()[0].split()[11])
   #print( int(subprocess.Popen('grep "NIONS" ' + where, stdout=subprocess.PIPE, shell=True).communicate()[0].split()[11]) )
 
-def get_ediff(where):
-  return float(subprocess.Popen('grep "  EDIFF" ' + where, stdout=subprocess.PIPE, shell=True).communicate()[0].split()[2])
+def get_ediff(out_car):
+  return float(subprocess.Popen('grep "  EDIFF" ' + out_car, stdout=subprocess.PIPE, shell=True).communicate()[0].split()[2])
   #print( float(subprocess.Popen('grep "  EDIFF" ' + where, stdout=subprocess.PIPE, shell=True).communicate()[0].split()[2]) )
 
 # Some ANSI colors
@@ -31,41 +30,40 @@ WARNING = '\033[93m'
 FAIL = '\033[91m'
 ENDC = '\033[0m'
 
-#===============================	
-try:
-	out_car = os.path.join(ini_path, 'OUTCAR')
-	outcar = open(out_car,"r")
-except IOError:
-	sys.stderr.write(FAIL)
-	sys.stderr.write("NO OUTCAR")
+# INITIALIZATION OF THE DATABASE	
+ini_path = os.path.join(os.getcwd(), 'Arg_2_metal')
+cwd = os.path.abspath(os.path.dirname(__file__)) 
+outdbpath = os.path.join(cwd, '2M_forces_database.db')
 
-if outcar != None:
-	outcarfile = os.path.join(ini_path, 'OUTCAR')
+# ITERATE OVER ALL 2M-dir's and get the forces at each ionic steps
+for j, d in enumerate(tqdm(next(os.walk(ini_path))[1])):
+	outcarfile  = os.path.join(ini_path, d, '03_ISIF3snsb', 'OUTCAR')
+	print(j, outcarfile)
+	outcar      = open(outcarfile, 'r')
 	outcarlines = outcar.readlines()
 
 	#Find max iterations
 	nelmax = int(subprocess.Popen('grep "NELM " ' + outcarfile, stdout=subprocess.PIPE, shell=True).communicate()[0].split()[2][0:-1])
-
 	natoms = get_number_of_atoms(outcarfile)
-	ediff = math.log10(float(get_ediff(outcarfile)))
+	ediff  = np.log10(float(get_ediff(outcarfile)))
 
-	re_energy = re.compile("free  energy")
+	re_energy    = re.compile("free  energy")
 	re_iteration = re.compile("Iteration")
-	re_timing = re.compile("LOOP:")
-	re_force = re.compile("TOTAL-FORCE")
-	re_mag = re.compile("number of electron")
-	re_volume = re.compile("volume of cell")
+	re_timing    = re.compile("LOOP:")
+	re_force     = re.compile("TOTAL-FORCE")
+	re_mag       = re.compile("number of electron")
+	re_volume    = re.compile("volume of cell")
 
-	lastenergy = 0.0
-	energy = 0.0
-	steps = 1
-	iterations = 0
-	cputime = 0.0
-	totaltime = 0.0
-	dE = 0.0
-	magmom = 0.0
+	lastenergy   = 0.0
+	energy       = 0.0
+	steps        = 1
+	iterations   = 0
+	cputime      = 0.0
+	totaltime    = 0.0
+	dE           = 0.0
+	magmom       = 0.0
+	volume       = 0.0
 	spinpolarized = False
-	volume = 0.0
 	#average = 0.0
 	#maxforce = 0.0
 
@@ -85,7 +83,7 @@ if outcar != None:
 				y = float(parts[4])
 				z = float(parts[5])
 				forces.append([x,y,z])
-				magnitudes.append(math.sqrt(x*x + y*y + z*z))
+				magnitudes.append(np.sqrt(x*x + y*y + z*z))
 				
 			average = sum(magnitudes)/natoms
 			maxforce = max(magnitudes)
@@ -107,13 +105,12 @@ if outcar != None:
 		if re_energy.search(line):
 			lastenergy = energy
 			energy = float(line.split()[4])
-			dE = math.log10(abs(energy-lastenergy+1.0E-12))
+			dE = np.log10(abs(energy-lastenergy+1.0E-12))
 
 			# Construct output string
 			try:
 				stepstr = str(steps).rjust(4)
 				energystr = "Energy: " + ("%3.6f" % (energy)).rjust(12)
-
 				logdestr = "Log|dE|: " + ("%1.3f" % (dE)).rjust(6)					
 				iterstr = "SCF: " + ("%3i" % (iterations))
 				avgfstr="Avg|F|: " + ("%2.3f" % (average)).rjust(6)
@@ -132,7 +129,6 @@ if outcar != None:
 				sys.stdout.write(OKGREEN)
 
 			if spinpolarized:
-				# sys.stdout.write(("Step %3i  Energy: %+3.6f  Log|dE|: %+1.3f  Avg|F|: %.6f  Max|F|: %.6f  SCF: %3i  Mag: %2.2f  Time: %03.2fm") % (steps,energy,dE,average,maxforce,iterations,magmom,cputime))
 				magstr="Mag: " + ("%2.2f" % (magmom)).rjust(6)
 				print ("%s  %s  %s  %s  %s  %s  %s  %s  %s" % (stepstr,energystr,logdestr,iterstr,avgfstr,maxfstr,volstr,magstr,timestr))
 			else:
