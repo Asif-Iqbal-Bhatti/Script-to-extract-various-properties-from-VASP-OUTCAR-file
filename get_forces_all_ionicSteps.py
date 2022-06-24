@@ -3,10 +3,10 @@
 '''
 # *****************************************************************************
 #   USAGE :: python3 grad2.py
-#   AUTHOR:: ADAPTATION OF Peter Larsson script to new version
-#            please see => https://www.nsc.liu.se/~pla/vasptools/
+#   AUTHOR:: ADAPTATION OF Peter Larsson script to new version @ASIFIQBAL
+#   please see => https://www.nsc.liu.se/~pla/vasptools/
 #   ABOUT THE PROGRAM:
-#	     It prints out the forces at each ionic steps during simulation
+#		It prints out the forces at each ionic steps during simulation
 # *****************************************************************************
 '''
 
@@ -44,6 +44,7 @@ for j, d in enumerate(tqdm(next(os.walk(ini_path))[1])):
 
 	#Find max iterations
 	nelmax = int(subprocess.Popen('grep "NELM " ' + outcarfile, stdout=subprocess.PIPE, shell=True).communicate()[0].split()[2][0:-1])
+	nsw    = int(subprocess.Popen('grep "NSW" ' + outcarfile + ' | head -1 | cut -d"=" -f2', stdout=subprocess.PIPE, shell=True).communicate()[0] )
 	natoms = get_number_of_atoms(outcarfile)
 	ediff  = np.log10(float(get_ediff(outcarfile)))
 
