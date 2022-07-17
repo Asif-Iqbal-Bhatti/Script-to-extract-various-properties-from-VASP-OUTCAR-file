@@ -26,8 +26,8 @@ os.system('rm -r disp-*')
 
 def copy_fntn(k):
 	for i in range(1, int(k)+1):
-		shutil.rmtree('disp-'+str(i).zfill(3), ignore_errors=True) #overwrite a directory
-		os.mkdir('disp-'+str(i).zfill(3))
+		shutil.rmtree(f'disp-{str(i).zfill(3)}', ignore_errors=True)
+		os.mkdir(f'disp-{str(i).zfill(3)}')
 		#subprocess.check_call(['mkdir', 'disp-'+str(i).zfill(3)])
 		#subprocess.check_call('cd disp-'+str(i).zfill(3), shell=True)	
 		# print(str(i).zfill(3))
@@ -35,14 +35,18 @@ def copy_fntn(k):
 		# The zfill()/rjust() is a function associated with the string object. 
 		# 3 is the expected length of the string after padding.
 		#
-		os.system('cp INCAR   disp-'+str(i).zfill(3) )
-		os.system('cp POTCAR  disp-'+str(i).zfill(3) )
-		os.system('cp KPOINTS disp-'+str(i).zfill(3) )
+		os.system(f'cp INCAR   disp-{str(i).zfill(3)}')
+		os.system(f'cp POTCAR  disp-{str(i).zfill(3)}')
+		os.system(f'cp KPOINTS disp-{str(i).zfill(3)}')
 		#os.system('cp job.sh  disp-'+str(i).zfill(3) )
 		#os.system('cp WAVECAR  disp-'+str(i).zfill(3) )
-		subprocess.call(['cp','-r','POSCAR-'+str(i).zfill(3),'disp-'+str(i).zfill(3)], shell = False)
-		os.chdir('disp-'+str(i).zfill(3))
-		shutil.copyfile("POSCAR-"+str(i).zfill(3), "POSCAR")
+		subprocess.call(
+			['cp', '-r', f'POSCAR-{str(i).zfill(3)}', f'disp-{str(i).zfill(3)}'],
+			shell=False,
+		)
+
+		os.chdir(f'disp-{str(i).zfill(3)}')
+		shutil.copyfile(f"POSCAR-{str(i).zfill(3)}", "POSCAR")
 		#os.system('ls')
 		os.chdir('../')
 
@@ -55,13 +59,15 @@ def create_phonon_directories():
 		print (' ERROR: POSCAR does not exist here.')
 		sys.exit(0)
 	else:
-		counter=0
-		mypath = os.getcwd()	
-		for entry in os.listdir(mypath):
-			if os.path.isfile(os.path.join(mypath, entry)):
-				if fnmatch.fnmatchcase(entry,'POSCAR-*'):
-					counter+=1
-		print ("# of POSCAR-* files generated with Phonopy code: ----> {}".format(counter) )
+		mypath = os.getcwd()
+		counter = sum(
+			1
+			for entry in os.listdir(mypath)
+			if os.path.isfile(os.path.join(mypath, entry))
+			and fnmatch.fnmatchcase(entry, 'POSCAR-*')
+		)
+
+		print(f"# of POSCAR-* files generated with Phonopy code: ----> {counter}")
 		print("*"*80)	
 
 		start_time = time.time()

@@ -11,16 +11,18 @@ ang2bohr   = 6.7483330371   # 1 A^3 = 6.7483330371 [a.u]^3
 
 class Elastic_Matrix:
 	def print_Cij_Matrix(): ###EXERCISE
-		Bij = []; C = "C"
-		for i in range(0, 6, 1): 
+		Bij = []
+		C = "C"
+		for i in range(6): 
 			Bij.append([])
-			for j in range(1,7, 1): 
+			for j in range(1, 7): 
 				Bij[i].append((C + str(i+1) + str(j)))
-		l = np.matrix(Bij)
-		return l
+		return np.matrix(Bij)
 
 	def langragian_strain():
-		kk = ('x', 'y', 'z'); C = "E"; Eij=[]
+		kk = ('x', 'y', 'z')
+		C = "E"
+		Eij=[]
 		eta = {
 		"xx" : 11,
 		"yy" : 22,
@@ -30,42 +32,37 @@ class Elastic_Matrix:
 		"xy" : 12  }
 		print ( "The Langragian strain in Voigt notation: ")
 		print ( eta.items())
-		
+
 		for n in kk: 
-			for m in kk: 
-				Eij.append( (C + str(n) + str(m)) )
-		ls = np.matrix(Eij).reshape(3,3)
-		return ls
+			Eij.extend(C + str(n) + str(m) for m in kk)
+		return np.matrix(Eij).reshape(3,3)
 
 
 def elastic_matrix_VASP_STRESS():
-	while True:		
+	while True:	
 		if not os.path.exists('OUTCAR'):
 			print (' ERROR: OUTCAR does not exist here.')
 			sys.exit(0)
-			
+
 		s=np.zeros((6,6))
-		c=np.zeros((6,6))	
-		file = open("OUTCAR",'r')
-		lines = file.readlines()		
-		file.close()
-		
+		c=np.zeros((6,6))
+		with open("OUTCAR",'r') as file:
+			lines = file.readlines()
 		for i in lines:
 			if "TOTAL ELASTIC MODULI (kBar)" in i:
 				ll=lines.index(i)
 			if "LATTYP" in i:
 				crystaltype=str(i.split()[3])
-		print ("DETECTED CRYSTAL FROM OUTCAR:", crystaltype)			
-		print (" ")			
-		for i in range(0,6):
+		print ("DETECTED CRYSTAL FROM OUTCAR:", crystaltype)
+		print (" ")
+		for i in range(6):
 			l=lines[ll+3+i] # indexing a line in huge file
 			word = l.split()
 			s[i][:] = word[1:7]
-			for j in range(0,6):
+			for j in range(6):
 				c[i][j] = float(s[i][j])/10.0
-				
 ##########-------------------stress tensor------------------	
-			
+
 		Cij = np.matrix(c)
 		np.set_printoptions(precision=4, suppress=True)
 		print (Cij)
@@ -76,114 +73,108 @@ def elastic_matrix_VASP_STRESS():
 		if evals.all() > 0:
 			print(evals)
 			print("All Eigen values are positive")
-		
 ##########-------------------Compliance tensor------------------
 ##########-------------------  s_{ij} = C_{ij}^{-1}
 
 		Sij = np.linalg.inv(Cij)
-		
 #---------------------------- ELASTIC PROPERTIES -----------------------------------
 
 		stability_test(Cij, crystaltype)
-		
 ######## -----------------------------VOIGT-------------------------------
-  
+
 	'''Voigt bulk modulus  (GPa)'''
-	
+
 	#9K_v = (C_{11}+C_{22}+C_{33}) + 2(C_{12} + C_{23} + C_{31}) 
 	Bv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) + 2 * (Cij[0,1] + Cij[1,2] + Cij[2,0])) / 9.0
-	
+
 	'''Voigt shear modulus  (GPa)'''
-	
+
 	#15*G_v = (C_{11}+C_{22}+C_{33}) - (C_{12} + C_{23} + C_{31}) + 3(C_{44} + C_{55} + C_{66})$
 	Gv = ((Cij[0,0] + Cij[1,1] + Cij[2,2]) - (Cij[0,1] + Cij[1,2] + Cij[2,0]) 
 	+ 3 * (Cij[3,3] + Cij[4,4] + Cij[5,5]))/15.0
-	
+
 	## Young's: Voigt
 	Ev = (9*Bv*Gv)/(3*Bv + Gv)
-		
+
 	## Poisson's ratio: Voigt
 	NuV = (3*Bv - Ev)/(6*Bv)
-	
+
 	######## -----------------------------REUSS-------------------------------
-	
+
 	# Reuss bulk modulus  K_R  $(GPa)$
 	#  1/K_R = (s_{11}+s_{22}+s_{33}) + 2(s_{12} + s_{23} + s_{31})$
 	Br = 1/((Sij[0,0] + Sij[1,1] + Sij[2,2]) + 2*(Sij[0,1] + Sij[1,2] + Sij[2,0])) 
-	
+
 	# Reuss shear modulus  G_v  $(GPa)$
 	# 15/G_R = 4*(s_{11}+s_{22}+s_{33}) - 4*(s_{12} + s_{23} + s_{31}) + 3(s_{44} + s_{55} + s_{66})$
 	Gr = (4 * (Sij[0,0] + Sij[1,1] + Sij[2,2]) - 4*(Sij[0,1] + Sij[1,2] + Sij[2,0]) 
 	+ 3 * (Sij[3,3] + Sij[4,4] + Sij[5,5]))
 	Gr = 15.0/Gr
-	
+
 	## Young's: Reuss
 	Er = (9*Br*Gr)/(3*Br + Gr)	
-	
+
 	## Poisson's ratio: Reuss
 	NuR = (3*Br - Er)/(6*Br)
 
 	##########################################################################
 
 	######## -----------------------------Averages-------------------------------
-	
+
 	# #Hill bulk modulus  K_{VRH}$ $(GPa)$
 	#  K_{VRH} = (K_R + K_v)/2 
 	B_H = (Bv + Br)/2
 	#print ("VRH bulk modulus  (GPa): %20.8f " %(B_H) )
-	
+
 	# Hill shear modulus  G_{VRH}$ $(GPa)$
 	#  G_{VRH} = (G_R + G_v)/2 
 	G_H = (Gv + Gr)/2
 	#print ("VRH shear modulus (GPa): %20.8f " %(G_H) )
-	
+
 	# Young modulus E = 9BG/(3B+G)
 	#E_H = (9 * B_H * G_H) / (3 * B_H + G_H)
 	E_H = (Ev + Er)/2
 	#print ("Young modulus E : {:1.8s} {:20.8f}".format(" ",E_H) )
-	
+
 	# ### Isotropic Poisson ratio $\mu 
 	# $\mu = (3K_{VRH} - 2G_{VRH})/(6K_{VRH} + 2G_{VRH})$
 	#nu_H = (3 * B_H - 2 * G_H) / (6 * B_H + 2 * G_H )
 	nu_H = (NuV + NuR) / 2
 	#print ("Isotropic Poisson ratio: {:15.8f} ".format(nu_H) )
-	
+
 	## Elastic Anisotropy
 	## Zener anisotropy for cubic crystals only
 	A = 2*(c44)/(c11-c12)
-	
+
 	# Universal Elastic Anisotropy AU
 	AU = (Bv/Br) + 5*(Gv/Gr) - 6.0
-	
+
 	# C' tetragonal shear modulus
 	C = (c11-c12)/2
-	
+
 	ratio_V = Bv/Gv
 	ratio_R = Br/Gr
-	print ("{:_^80}".format("GPa"))	
-	print ("{:25.8s}  {:15.8s} {:15.8s} {:15.8s}".format(" ","Voigt", "Reuss ", "Hill") )	
+	print ("{:_^80}".format("GPa"))
+	print ("{:25.8s}  {:15.8s} {:15.8s} {:15.8s}".format(" ","Voigt", "Reuss ", "Hill") )
 	print ("{:16.20s} {:15.3f} {:15.3f} {:15.3f}".format("Bulk Modulus",Bv, Br, B_H) )
 	print ("{:16.20s} {:15.3f} {:15.3f} {:15.3f}".format("Shear Modulus",Gv, Gr, G_H) )
 	print ("{:16.20s} {:15.3f} {:15.3f} {:15.3f}".format("Young Modulus",Ev, Er, E_H) )
-	print ("{:-^80}".format("-"))	
+	print ("{:-^80}".format("-"))
 	print ("{:16.20s} {:15.3f} {:15.3f} {:15.3f}".format("Poisson ratio ", NuV, NuR, nu_H) )
 	print ("{:16.20s} {:15.3f} {:15.3f} {:15.3f}({:5.3f})".format("B/G ratio ",Bv/Gv,Br/Gr, B_H/G_H, G_H/B_H) )
-	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("Zener ratio Az",'','', A) )	
+	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("Zener ratio Az",'','', A) )
 	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("Avr ratio ",'','', (Gv-Gr)/(Gv+Gr)) )
 	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("AU ",'','', AU) )
 	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("Cauchy pressure ",'','', (c12-c44)) )
 	print ("{:16.20s} {:15.3s} {:15.3s} {:15.3f}".format("C'tetra Shear ",'','',  C) )
-	
+
 	print ("-"*80)
 	return Sij
 	
 		
 		
 def ductile_test(ratio):
-	if(ratio > 1.75):
-		return "ductile"
-	else:
-		return "brittle"
+	return "ductile" if (ratio > 1.75) else "brittle"
 ###
 	
 def stability_test(matrix, crystaltype):

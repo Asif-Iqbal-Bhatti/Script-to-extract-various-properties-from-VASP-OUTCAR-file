@@ -25,18 +25,15 @@ subprocess.call(['sed','-i','/^[[:space:]]*$/d',sys.argv[1]], shell = False)
 #---------------------------------'''METHOD 2'''  
 
 a = []
-f = open(filename, 'r')
-
-for line in f.readlines():
-	a.append([])
-	for i in line.strip().split():
-		a[-1].append(float(i))
-#print (a)
-
-f.close()
+with open(filename, 'r') as f:
+	for line in f:
+		a.append([])
+		for i in line.strip().split():
+			a[-1].append(float(i))
 #------------------------------------------------------------------------
 #a = np.random.random((900, 900))	
-s = np.shape(a); print('size of a Matrix', s)
+s = np.shape(a)
+print('size of a Matrix', s)
 a = np.matrix(a)
 #print(a)
 

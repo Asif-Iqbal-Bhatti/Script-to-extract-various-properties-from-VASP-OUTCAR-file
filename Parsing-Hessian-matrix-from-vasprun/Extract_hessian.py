@@ -68,31 +68,25 @@ print("*"*80)
 # H = (3N,3N)
 #-----------------------------------------------------------------------------------
 
-hessian = root.xpath('*/dynmat/varray/v/text()')	
-hess_v = []
+hessian = root.xpath('*/dynmat/varray/v/text()')
+hess_v = [ind_hess.split() for ind_hess in hessian]
 
-for ind_hess in hessian:
-    hess_v.append( ind_hess.split() )
 hess_v = np.array(hess_v)
 
 print("*"*80)
 #print(hess_v) 								# for debugging ONLY
-row = len(hess_v); print("# of rows:", row)
-col = len(hess_v[0]); print("# of columns:", col)
+row = len(hess_v)
+print("# of rows:", row)
+col = len(hess_v[0])
+print("# of columns:", col)
 print("*"*80)
-#-----------------------------------------------------------------------------------
-
-#*********************** writing Hessian to a file ********************************
-out = open('hessian.dat','w')
-
-for i in range( int(row/2) ):
-	for j in range(col):
-		#print(hess_v[i][j], end=' ' )
-		out.write( "{:18.11s}".format( hess_v[i][j])  )
-	out.write('\n')	
-	#print()	
-	
-out.close()
+with open('hessian.dat','w') as out:
+  for i in range(row // 2):
+    for j in range(col):
+    	#print(hess_v[i][j], end=' ' )
+    	out.write( "{:18.11s}".format( hess_v[i][j])  )
+    out.write('\n')	
+    #print()	
 
 #******************************End Hessian******************************************
 
@@ -112,24 +106,22 @@ print(np.array(xml_basevect))
 #******************************End basevectors********************************
 '''
 #---------------------------------'''METHOD 2'''---------------------------------  
-	
-a = [] ; l=0
-f = open('hessian.dat', 'r')
 
-for line in f.readlines():
-	a.append([])
-	#print (line[0])
-	if (line[0] == '#'):
-		continue
-	for i in line.strip().split():
-		a[-1].append(float(i))
-	l+=1		
-#print (a)
-
-f.close()
+a = []
+l=0
+with open('hessian.dat', 'r') as f:
+  for line in f:
+    a.append([])
+    #print (line[0])
+    if (line[0] == '#'):
+    	continue
+    for i in line.strip().split():
+    	a[-1].append(float(i))
+    l+=1
 #------------------------------------------------------------------------
 #a = np.random.random((900, 900))	
-s = np.shape(a); print('size of a Matrix', s)
+s = np.shape(a)
+print('size of a Matrix', s)
 a = np.matrix(a)
 #print(a)
 print ('--------------------------------EIGVAL AND EIGVECTORS ARE:')

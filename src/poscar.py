@@ -14,9 +14,12 @@ def poscar():
 		print (' ERROR: POSCAR does not exist here.')
 		sys.exit(0)
 	print('Reading POSCAR/CONTCAR: \n')
-	pos = []; kk = []; lattice = []; sum = 0
+	pos = []
+	kk = []
+	lattice = []
+	sum = 0
 	file = open('POSCAR','r') or open('CONTCAR','r')
-	
+
 	firstline   = file.readline() # IGNORE first line comment
 	secondfline = file.readline() # scale
 	Latvec1 = file.readline()
@@ -28,11 +31,10 @@ def poscar():
 	elementtype=file.readline().split()
 	if (str.isdigit(elementtype[0])):
 		sys.exit("VASP 4.X POSCAR detected. Please add the atom types")
-	print ("Types of elements:", str(elementtype), end = '\n')
+	print("Types of elements:", elementtype, end = '\n')
 	numberofatoms=file.readline()
 	Coordtype=file.readline()
 	print ("Coordtype:", (Coordtype), end = '\n')	
-	
 ########################---------------------------------------------------------
 	print (">>>>>>>>>-------------------# of Atoms--------------------")
 	nat = numberofatoms.split()
@@ -44,37 +46,31 @@ def poscar():
 	print ("Number of atoms:", (numberofatoms), end = '\n')
 ########################---------------------------------------------------------
 
-	#print (">>>>>>>>>---------------Atomic positions------------------")				
-	for x in range(int(numberofatoms)):
+	#print (">>>>>>>>>---------------Atomic positions------------------")
+	for _ in range(int(numberofatoms)):
 		coord = file.readline().split()
 		coord = [float(i) for i in coord]
 		pos = pos + [coord]
 	pos = np.array(pos)
 	#print (pos)
-		
+
 	file.close()	
 
-########################---------------------------------------------------------
-	a=[]; b=[]; c=[];
 	Latvec1=Latvec1.split()
 	Latvec2=Latvec2.split()
-	Latvec3=Latvec3.split()	
-	for ai in Latvec1:
-		a.append(float(ai))
-	for bi in Latvec2:
-		b.append(float(bi))
-	for ci in Latvec3:
-		c.append(float(ci))
-		
+	Latvec3=Latvec3.split()
+	a = [float(ai) for ai in Latvec1]
+	b = [float(bi) for bi in Latvec2]
+	c = [float(ci) for ci in Latvec3]
 ########################---------------------------------------------------------
 
-	print (">>>>>>>>>---------------Lattice vectors distortions-----------------")				
+	print (">>>>>>>>>---------------Lattice vectors distortions-----------------")
 	lattice = np.array([a] + [b] + [c])
 	#determinant = np.linalg.det(lattice)
 	lld = local_lattice_distortion(a,b,c)
-	print ("lattice distortion parameter g: {}".format(lld) )
-	
-	print (">>>>>>>>>---------------Space group-----------------")		
+	print(f"lattice distortion parameter g: {lld}")
+
+	print (">>>>>>>>>---------------Space group-----------------")
 	print (" ")
 	sp, symm = space_group_analyse(lattice, pos)
 	print ( sp, symm )
@@ -99,12 +95,14 @@ def local_lattice_distortion(a1,b1,c1):
 	#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
 	#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
 	#print ("")
-	a=np.linalg.norm(a1); b=np.linalg.norm(b1); c=np.linalg.norm(c1)
+	a=np.linalg.norm(a1)
+	b=np.linalg.norm(b1)
+	c=np.linalg.norm(c1)
 	d = np.array([a,b,c])
-	d_mean = np.mean(d); d_std = np.std(d)
+	d_mean = np.mean(d)
+	d_std = np.std(d)
 	d_square_mean = (a**2 + b**2 + c**2)/3
-	g = np.sqrt( d_square_mean/(d_mean)**2 - 1 )
-	return g
+	return np.sqrt( d_square_mean/(d_mean)**2 - 1 )
 ###
 # Song, H. et al. Local lattice distortion in high-entropy alloys. Phys. Rev. Mater. 1, 23404 (2017).
 # Senkov, O. N. & Miracle, D. B. Effect of the atomic size distribution on glass forming ability of amorphous metallic alloys. Mater. Res. Bull. 36, 2183–2198 (2001).
@@ -115,7 +113,9 @@ def local_lattice_distortion_DEF1():
 	#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
 	#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
 	print ("+"*40,"HUME ROTHERY RULE","+"*40)
-	C_i=C=0.2 ; r_avg = 0.0; del_sum=0.0
+	C_i=C=0.2
+	r_avg = 0.0
+	del_sum=0.0
 	elements = ["Nb", "Hf", "Ta", "Ti", "Zr"]
 	eta = {
 	"Nb" : 1.98,
@@ -123,17 +123,17 @@ def local_lattice_distortion_DEF1():
 	"Ta" : 2.00,
 	"Ti" : 1.76,
 	"Zr" : 2.06, }
-	
+
 	print ("                      {element: atomic radius}")
 	print (eta)
-	
+
 	for i in elements: 
 		r_avg = r_avg + C * eta[i] 
-	
+
 	for j in elements:
 		del_sum = del_sum + C * ( 1 - float(eta[j]) / r_avg )**2
-	del_sum = 100 * np.sqrt(del_sum) 	
-	print("HEA_atomic_size_mismatch: \u03B4={}".format(del_sum))
+	del_sum = 100 * np.sqrt(del_sum)
+	print(f"HEA_atomic_size_mismatch: \u03B4={del_sum}")
 ###
 	
 def local_lattice_distortion_DEF2():
@@ -141,34 +141,35 @@ def local_lattice_distortion_DEF2():
 	print ("Phys. Rev. Mater. 1, 23404 (2017).")
 	print ("_____| Different definition of the atomic radius for the description ")
 	print ("       of the local lattice distortion in HEAs")
-	
+
 	if not os.path.exists('POSCAR' and 'CONTCAR'):
 		print (' ERROR: POSCAR & CONTCAR does not exist')
 		sys.exit(0)
 	print('Reading POSCAR and CONTCAR ... \n')
-	
-	x = []; y =[]; z=[]
-	xp =[]; yp = []; zp = []; temp=0
-	
-	f = open('POSCAR','r')
-	lines_poscar = f.readlines()
-	f.close()
-	
-	f = open('CONTCAR','r')
-	lines_contcar = f.readlines()
-	f.close()
-	
+
+	x = []
+	y =[]
+	z=[]
+	xp =[]
+	yp = []
+	zp = []
+	temp=0
+
+	with open('POSCAR','r') as f:
+		lines_poscar = f.readlines()
+	with open('CONTCAR','r') as f:
+		lines_contcar = f.readlines()
 	sum_atoms = lines_poscar[6].split()  ### reading 7th lines for reading # of atoms
 	sum_atoms = [int(i) for i in sum_atoms]
 	sum_atoms = sum(sum_atoms)
-	
+
 	for i in lines_poscar:
 		if "Direct" in i:
 			lp=lines_poscar.index(i)
 	for j in lines_contcar:
 		if "Direct" in j:
 			lc=lines_contcar.index(j)
-			
+
 	for i in range(sum_atoms):
 		x, y, z    = lines_poscar[lp+1+i].split()
 		xp, yp, zp = lines_contcar[lp+1+i].split()
@@ -176,7 +177,7 @@ def local_lattice_distortion_DEF2():
 		xp = float(xp); yp = float(yp); zp = float(zp)
 		temp = temp + np.sqrt( (x-xp)**2 + (y-yp)**2 + (z-zp)**2 )
 	temp = temp/sum_atoms
-	print("local lattice distortion: \u0394d={}".format(temp))	
+	print(f"local lattice distortion: \u0394d={temp}")	
 ###
 
 def space_group_analyse(lattice, pos):
@@ -214,50 +215,44 @@ def space_group_analyse(lattice, pos):
 def poscar_VASP42VASP5():
 	if not os.path.exists('POSCAR' and 'POTCAR'):
 		print (' ERROR: POSCAR does not exist here.')
-		sys.exit(0)	
-	file1 = open("POSCAR",'r')
-	line1 = file1.readlines()		
-	file1.close()
-	
-	file2 = open("POTCAR",'r')
-	line2 = file2.readlines()		
-	file2.close()
-	
+		sys.exit(0)
+	with open("POSCAR",'r') as file1:
+		line1 = file1.readlines()
+	with open("POTCAR",'r') as file2:
+		line2 = file2.readlines()
 	atom_number=[]
 	for i in line1:
 		if ("Direct" or "direct" or "d" or "D") in i:
 			PP=line1.index(i)
 	atom_number = line1[5].split()
 	print(atom_number)
-	
-	elementtype=[]; count=0
+
+	elementtype=[]
+	count=0
 	for i in line2:
 		if ("VRHFIN") in i:
 			count+=1
 			#print (i.split('=')[1].split(':')[0])
 			elementtype.append(i.split('=')[1].split(':')[0])
-	
-	test = open("POSCAR_W",'w')
-	
-	for i in range(5):
-		test.write( line1[i] )
-		
-	for j in elementtype:
-		test.write("\t" +  j)
-	test.write("\n" )
-	
-	for j in atom_number:
-		test.write("\t" +  j )
-	test.write("\n" )
-	
-	test.write("Selective dynamics")
-	test.write("\n" )
-	
-	for i in range(len(line1)-PP):
-		test.write(line1[PP+i] )
-		
-	test.close()
-	
+
+	with open("POSCAR_W",'w') as test:
+		for i in range(5):
+			test.write( line1[i] )
+
+		for j in elementtype:
+			test.write("\t" +  j)
+		test.write("\n" )
+
+		for j in atom_number:
+			test.write("\t" +  j )
+		test.write("\n" )
+
+		test.write("Selective dynamics")
+		test.write("\n" )
+
+		for i in range(len(line1)-PP):
+			test.write(line1[PP+i] )
+
 	print ("                        File is converted: POSCAR_W")
 ###
 
@@ -267,7 +262,7 @@ def poscar_VASP42VASP5():
 def volume(a,b,c,alpha,beta,gamma):
 	ang2atomic = 1.889725988579 # 1 A = 1.889725988579 [a.u]
 	Ang32Bohr3 = 6.74833304162   # 1 A^3 = 6.7483330371 [a.u]^3
-	
+
 	length = np.linalg.norm(a) * np.linalg.norm(b) * np.linalg.norm(c) 
 	volume = length * ( np.sqrt(1 + 2 * math.cos(alpha) * math.cos(beta) * math.cos(gamma) - math.cos(alpha)**2 - math.cos(beta)**2 - math.cos(gamma)**2) )
 	vol_au = volume * Ang32Bohr3

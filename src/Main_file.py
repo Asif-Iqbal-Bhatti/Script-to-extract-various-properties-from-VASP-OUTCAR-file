@@ -28,22 +28,27 @@ if __name__ == "__main__":
 	from strain 			import *
 	from create_phonon_directories import *
 	from evaluate_manually_Elastic_constants import *
-	
+
 	from colorama 			import Fore, Back, Style, init
-	from termcolor 			import colored	
+	from termcolor 			import colored
 	from pylab 				import *
 	import multiprocessing as mp
 	import compileall
-	
+
 	print ("This may take a while!")
 	compileall.compile_dir(".", force=1)
-	
+
 	Introduction()
 	init(autoreset=True)
 	print(colored('@'*80,'red'), end = '\n', flush=True)
 	print("Number of processors Detected: ", mp.cpu_count())
-	print(Back.MAGENTA + ' NB: POSCAR should be in VASP 5 format & without selective dynamics', end = '\n', flush=True)
-	print(Style.RESET_ALL)	
+	print(
+		f'{Back.MAGENTA} NB: POSCAR should be in VASP 5 format & without selective dynamics',
+		end='\n',
+		flush=True,
+	)
+
+	print(Style.RESET_ALL)
 	print(colored('-'*80,'red'), end = '\n', flush=True)
 	print('>>> USAGE: execute by typing python3 sys.argv[0]')
 	print(colored('~'*80,'red'), end = '\n', flush=True)
@@ -68,33 +73,33 @@ if __name__ == "__main__":
 	while True:
 		option = input("Enter the option as listed above: ")
 		option = int(option)
-		
+
 		if (option == 1):
 			poscar()
-			
+
 		elif (option == 2):
 			VOL_P = main_poscar()
 			VOL_C = main_contcar()
 			volume_diff(VOL_P, VOL_C)
-			
+
 		elif (option == 3):
 			energy_vs_volume()
-			
+
 		elif (option == 4):
 			print("OUTCAR should be in the same directory from which this script is run ")		
 			pool = mp.Pool(mp.cpu_count())
 			elastic_matrix_VASP_STRESS()
 			pool.close()
-			
+
 		elif (option == 5):
 			fitting_energy_vs_volume_curve()
-			
+
 		elif (option == 6):
 			poscar_VASP42VASP5()	
-	
+
 		elif (option == 7):
 			Elastic_strain()
-	
+
 		elif (option == 8):
 			create_phonon_directories()
 
@@ -103,10 +108,10 @@ if __name__ == "__main__":
 
 		elif (option == 10):
 			local_lattice_distortion_DEF1()
-			
+
 		elif (option == 11):		
 			local_lattice_distortion_DEF2()
-			
+
 		else:
 			print ("INVALID OPTION")
 	

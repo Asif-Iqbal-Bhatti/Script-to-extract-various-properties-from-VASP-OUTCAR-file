@@ -42,9 +42,12 @@ def poscar():
 		print (' ERROR: POSCAR does not exist here.')
 		sys.exit(0)
 	print('Reading POSCAR/CONTCAR: \n')
-	pos = []; kk = []; lattice = []; sum = 0
+	pos = []
+	kk = []
+	lattice = []
+	sum = 0
 	file = open('POSCAR','r') or open('CONTCAR','r')
-	
+
 	firstline   = file.readline() # IGNORE first line comment
 	secondfline = file.readline() # scale
 	Latvec1 = file.readline()
@@ -56,11 +59,10 @@ def poscar():
 	elementtype=file.readline().split()
 	if (str.isdigit(elementtype[0])):
 		sys.exit("VASP 4.X POSCAR detected. Please add the atom types")
-	print ("Types of elements:", str(elementtype), end = '\n')
+	print("Types of elements:", elementtype, end = '\n')
 	numberofatoms=file.readline()
 	Coordtype=file.readline()
 	print ("Coordtype:", (Coordtype), end = '\n')	
-	
 ########################---------------------------------------------------------
 	print (">>>>>>>>>-------------------# of Atoms--------------------")
 	nat = numberofatoms.split()
@@ -72,37 +74,31 @@ def poscar():
 	print ("Number of atoms:", (numberofatoms), end = '\n')
 ########################---------------------------------------------------------
 
-	#print (">>>>>>>>>---------------Atomic positions------------------")				
-	for x in range(int(numberofatoms)):
+	#print (">>>>>>>>>---------------Atomic positions------------------")
+	for _ in range(int(numberofatoms)):
 		coord = file.readline().split()
 		coord = [float(i) for i in coord]
 		pos = pos + [coord]
 	pos = np.array(pos)
 	#print (pos)
-		
+
 	file.close()	
 
-########################---------------------------------------------------------
-	a=[]; b=[]; c=[];
 	Latvec1=Latvec1.split()
 	Latvec2=Latvec2.split()
-	Latvec3=Latvec3.split()	
-	for ai in Latvec1:
-		a.append(float(ai))
-	for bi in Latvec2:
-		b.append(float(bi))
-	for ci in Latvec3:
-		c.append(float(ci))
-		
+	Latvec3=Latvec3.split()
+	a = [float(ai) for ai in Latvec1]
+	b = [float(bi) for bi in Latvec2]
+	c = [float(ci) for ci in Latvec3]
 ########################---------------------------------------------------------
 
-	print (">>>>>>>>>---------------Lattice vectors distortions-----------------")				
+	print (">>>>>>>>>---------------Lattice vectors distortions-----------------")
 	lattice = np.array([a] + [b] + [c])
 	#determinant = np.linalg.det(lattice)
 	lld = lattic_distortion.local_lattice_distortion(a,b,c)
-	print ("lattice distortion parameter g: {}".format(lld) )
-	
-	print (">>>>>>>>>---------------Space group-----------------")		
+	print(f"lattice distortion parameter g: {lld}")
+
+	print (">>>>>>>>>---------------Space group-----------------")
 	print (" ")
 	sp, symm = space_group_analyse(lattice, pos)
 	print ( sp, symm )
@@ -124,17 +120,19 @@ def poscar():
 ###
 class lattic_distortion():
 	@classmethod
-	def local_lattice_distortion(a1,b1,c1):
+	def local_lattice_distortion(cls, b1, c1):
 		#print ("The lattice distortion in paracrystals is measured by the lattice distortion parameter g")
 		#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
 		#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
 		#print ("")
-		a=np.linalg.norm(a1); b=np.linalg.norm(b1); c=np.linalg.norm(c1)
+		a = np.linalg.norm(cls)
+		b=np.linalg.norm(b1)
+		c=np.linalg.norm(c1)
 		d = np.array([a,b,c])
-		d_mean = np.mean(d); d_std = np.std(d)
+		d_mean = np.mean(d)
+		d_std = np.std(d)
 		d_square_mean = (a**2 + b**2 + c**2)/3
-		g = np.sqrt( d_square_mean/(d_mean)**2 - 1 )
-		return g
+		return np.sqrt( d_square_mean/(d_mean)**2 - 1 )
 	###
 	
 	def local_lattice_distortion_DEF1():
@@ -142,7 +140,9 @@ class lattic_distortion():
 		#print (Back.YELLOW + "Wang, S. Atomic structure modeling of multi-principal-element alloys by the principle")
 		#print (Back.YELLOW + "of maximum entropy. Entropy 15, 5536–5548 (2013).")
 		print ("+"*40,"HUME ROTHERY RULE","+"*40)
-		C_i=C=0.2 ; r_avg = 0.0; del_sum=0.0
+		C_i=C=0.2
+		r_avg = 0.0
+		del_sum=0.0
 		elements = ["Nb", "Hf", "Ta", "Ti", "Zr"]
 		eta = {
 		"Nb" : 1.98,
@@ -150,17 +150,17 @@ class lattic_distortion():
 		"Ta" : 2.00,
 		"Ti" : 1.76,
 		"Zr" : 2.06, }
-		
+
 		print ("                      {element: atomic radius}")
 		print (eta)
-		
+
 		for i in elements: 
 			r_avg = r_avg + C * eta[i] 
-		
+
 		for j in elements:
 			del_sum = del_sum + C * ( 1 - float(eta[j]) / r_avg )**2
-		del_sum = 100 * np.sqrt(del_sum) 	
-		print("HEA_atomic_size_mismatch: \u03B4={}".format(del_sum))
+		del_sum = 100 * np.sqrt(del_sum)
+		print(f"HEA_atomic_size_mismatch: \u03B4={del_sum}")
 	###
 		
 def local_lattice_distortion_DEF2():
@@ -169,42 +169,43 @@ def local_lattice_distortion_DEF2():
 	print ("	Phys. Rev. Mater. 1, 23404 (2017).")
 	print ("	(***) Different definition of the atomic radius for the description ")
 	print ("	of the local lattice distortion in HEAs")
-	
+
 	if not os.path.exists('POSCAR' and 'CONTCAR'):
 		print ('>>> ERROR: POSCAR & CONTCAR does not exist (Both should be in the same directory)')
 		sys.exit(0)
 	print('Reading POSCAR and CONTCAR ... \n')
-	
-	x = []; y =[]; z=[]
-	xp =[]; yp = []; zp = []; temp=0
-	
-	f = open('POSCAR','r')
-	lines_poscar = f.readlines()
-	f.close()
-	
-	f = open('CONTCAR','r')
-	lines_contcar = f.readlines()
-	f.close()
-	
+
+	x = []
+	y =[]
+	z=[]
+	xp =[]
+	yp = []
+	zp = []
+	temp=0
+
+	with open('POSCAR','r') as f:
+		lines_poscar = f.readlines()
+	with open('CONTCAR','r') as f:
+		lines_contcar = f.readlines()
 	file_P = ase.io.read('POSCAR')
 	pos = file_P.get_cell_lengths_and_angles()
-	print (CRED + "POSCAR=>Length&Angles->{}".format(pos) + CEND)
+	print(CRED + f"POSCAR=>Length&Angles->{pos}" + CEND)
 	file_C = ase.io.read('CONTCAR')
-	con = file_C.get_cell_lengths_and_angles() 
-	print (CRED + "CONTCAR=>Length&Angles->{}".format(con) + CEND)
+	con = file_C.get_cell_lengths_and_angles()
+	print(CRED + f"CONTCAR=>Length&Angles->{con}" + CEND)
 	print ("Cell vectors difference:: ",con-pos)
-	
+
 	sum_atoms = lines_poscar[6].split()  ### reading 7th lines for reading # of atoms
 	sum_atoms = [int(i) for i in sum_atoms]
 	sum_atoms = sum(sum_atoms)
-	
+
 	for i in lines_poscar:
 		if "Direct" in i:
 			lp=lines_poscar.index(i)
 	for j in lines_contcar:
 		if "Direct" in j:
 			lc=lines_contcar.index(j)
-			
+
 	for i in range(sum_atoms):
 		x, y, z    = lines_poscar[lp+1+i].split()
 		xc, yc, zc = lines_contcar[lp+1+i].split()
@@ -212,7 +213,7 @@ def local_lattice_distortion_DEF2():
 		xc = float(xc); yc = float(yc); zc = float(zc)
 		temp = temp + np.sqrt( (x-xc)**2 + (y-yc)**2 + (z-zc)**2 )
 	temp = temp/sum_atoms
-	print("local lattice distortion (LLD): \u0394d={}".format(temp))	
+	print(f"local lattice distortion (LLD): \u0394d={temp}")	
 
 ###
 def space_group_analyse(lattice, pos):
@@ -250,50 +251,44 @@ def space_group_analyse(lattice, pos):
 def poscar_VASP42VASP5():
 	if not os.path.exists('POSCAR' and 'POTCAR'):
 		print (' ERROR: POSCAR does not exist here.')
-		sys.exit(0)	
-	file1 = open("POSCAR",'r')
-	line1 = file1.readlines()		
-	file1.close()
-	
-	file2 = open("POTCAR",'r')
-	line2 = file2.readlines()		
-	file2.close()
-	
+		sys.exit(0)
+	with open("POSCAR",'r') as file1:
+		line1 = file1.readlines()
+	with open("POTCAR",'r') as file2:
+		line2 = file2.readlines()
 	atom_number=[]
 	for i in line1:
 		if ("Direct" or "direct" or "d" or "D") in i:
 			PP=line1.index(i)
 	atom_number = line1[5].split()
 	print(atom_number)
-	
-	elementtype=[]; count=0
+
+	elementtype=[]
+	count=0
 	for i in line2:
 		if ("VRHFIN") in i:
 			count+=1
 			#print (i.split('=')[1].split(':')[0])
 			elementtype.append(i.split('=')[1].split(':')[0])
-	
-	test = open("POSCAR_W",'w')
-	
-	for i in range(5):
-		test.write( line1[i] )
-		
-	for j in elementtype:
-		test.write("\t" +  j)
-	test.write("\n" )
-	
-	for j in atom_number:
-		test.write("\t" +  j )
-	test.write("\n" )
-	
-	test.write("Selective dynamics")
-	test.write("\n" )
-	
-	for i in range(len(line1)-PP):
-		test.write(line1[PP+i] )
-		
-	test.close()
-	
+
+	with open("POSCAR_W",'w') as test:
+		for i in range(5):
+			test.write( line1[i] )
+
+		for j in elementtype:
+			test.write("\t" +  j)
+		test.write("\n" )
+
+		for j in atom_number:
+			test.write("\t" +  j )
+		test.write("\n" )
+
+		test.write("Selective dynamics")
+		test.write("\n" )
+
+		for i in range(len(line1)-PP):
+			test.write(line1[PP+i] )
+
 	print ("                        File is converted: POSCAR_W")
 ###
 
@@ -306,11 +301,14 @@ def poscar_VASP42VASP5():
 def main_poscar():
 	count = 0
 	os.system("rm out_POSCARS.dat")
-	VOL_P = []; pos = []; kk = []; lattice = [];
+	VOL_P = []
+	pos = []
+	kk = []
+	lattice = [];
 	mypath = os.getcwd()
-	print ("-"*100)	
+	print ("-"*100)
 	print (Back.YELLOW + "{:15s} {:15s} {:15.6s} {:15.6s} {:15.6s} {:15.15s}".format("Directory", "# of atoms", "||a||", \
-	"||b||", "||c||", "VOL_POS[A^3]"),end="\n" )	
+	"||b||", "||c||", "VOL_POS[A^3]"),end="\n" )
 	print ("-"*100)	
 
 	for entry in os.listdir(mypath):
@@ -318,101 +316,93 @@ def main_poscar():
 			#print (entry)
 			for file in os.listdir(entry):
 				if file == "POSCAR":
-					count+=1; sum = 0
+					count+=1
+					sum = 0
 					filepath = os.path.join(entry, file)
-					#f = open(filepath, 'r')
-					#print (f.read())
-					#f.close()	
-					fo = open(filepath, 'r')
-					ofile=open('out_POSCARS.dat','a')
-					
-					#print (colored('>>>>>>>>  Name of the file: ','red'), fo.name, end = '\n', flush=True)
-					
-					ofile.write (fo.name + '\n')
-					ofile.write ("")
-					firstline   = fo.readline()
-					secondfline = fo.readline()
-					Latvec1 = fo.readline()
-					#print ("Lattice vector 1:", (Latvec1), end = '')
-					#ofile.write (Latvec1)
-					Latvec2 = fo.readline()
-					#print ("Lattice vector 2:", (Latvec2), end = '')
-					#ofile.write (Latvec2)
-					Latvec3 = fo.readline()
-					#print ("Lattice vector 3:", (Latvec3), end = '')
-					#ofile.write (Latvec3)
-					elementtype=fo.readline()
-					elementtype = elementtype.split()						
-					#print ("Types of elements:", str(elementtype), end = '')
-					#ofile.write (str(elementtype))
-					numberofatoms=fo.readline()
-					#print ("Number of atoms:", (numberofatoms), end = '')
-					#ofile.write ((numberofatoms))
-					Coordtype=fo.readline()
+					with open(filepath, 'r') as fo:
+						ofile=open('out_POSCARS.dat','a')
 
+						#print (colored('>>>>>>>>  Name of the file: ','red'), fo.name, end = '\n', flush=True)
+
+						ofile.write (fo.name + '\n')
+						ofile.write ("")
+						firstline   = fo.readline()
+						secondfline = fo.readline()
+						Latvec1 = fo.readline()
+						#print ("Lattice vector 1:", (Latvec1), end = '')
+						#ofile.write (Latvec1)
+						Latvec2 = fo.readline()
+						#print ("Lattice vector 2:", (Latvec2), end = '')
+						#ofile.write (Latvec2)
+						Latvec3 = fo.readline()
+						#print ("Lattice vector 3:", (Latvec3), end = '')
+						#ofile.write (Latvec3)
+						elementtype=fo.readline()
+						elementtype = elementtype.split()
+						#print ("Types of elements:", str(elementtype), end = '')
+						#ofile.write (str(elementtype))
+						numberofatoms=fo.readline()
+						#print ("Number of atoms:", (numberofatoms), end = '')
+						#ofile.write ((numberofatoms))
+						Coordtype=fo.readline()
 ##########################---------------------------------------------------------
-					#print ("**********-------------------# of Atoms--------------------")
-					
-					nat = numberofatoms.split()
-					nat = [int(i) for i in nat]
-					for i in nat:
-						sum = sum + i
-					numberofatoms = sum
-					#print ("{} :: Number of atoms: {}".format(nat, numberofatoms) )
+						#print ("**********-------------------# of Atoms--------------------")
+
+						nat = numberofatoms.split()
+						nat = [int(i) for i in nat]
+						for i in nat:
+							sum = sum + i
+						numberofatoms = sum
+											#print ("{} :: Number of atoms: {}".format(nat, numberofatoms) )
 ##########################---------------------------------------------------------					
-					#print ("-----------------------Atomic positions-----------------")
-					#print ("Coordtype:", (Coordtype), end = '')						
-					for x in range(int(numberofatoms)):
-						coord = fo.readline().split()
-						coord = [float(i) for i in coord]
-						pos = pos + [coord]
-					pos = np.array(pos)
-					#print (pos)
-					
-					ofile.write ("\n")			
-					fo.close()
-##########################---------------------------------------------------------
+											#print ("-----------------------Atomic positions-----------------")
+											#print ("Coordtype:", (Coordtype), end = '')						
+						for _ in range(int(numberofatoms)):
+							coord = fo.readline().split()
+							coord = [float(i) for i in coord]
+							pos = pos + [coord]
+						pos = np.array(pos)
+						#print (pos)
 
-					a=[]; b=[]; c=[];
+						ofile.write ("\n")
 					Latvec1=Latvec1.split()
 					Latvec2=Latvec2.split()
 					Latvec3=Latvec3.split()
-					
-##########################---------------------------------------------------------
-					for ai in Latvec1: a.append(float(ai))
-					for bi in Latvec2: b.append(float(bi))
-					for ci in Latvec3: c.append(float(ci))	
+
+					a = [float(ai) for ai in Latvec1]
+					b = [float(bi) for bi in Latvec2]
+					c = [float(ci) for ci in Latvec3]
 					#print ('a=', a)
-					ofile.write ("'a=' {}\n".format(a))
+					ofile.write(f"'a=' {a}\n")
 					#print ('b=', b)
-					ofile.write ("'b=' {}\n".format(b))
+					ofile.write(f"'b=' {b}\n")
 					#print ('c=', c)
-					ofile.write ("'c=' {}\n".format(c))		
+					ofile.write(f"'c=' {c}\n")
 					lld = lattic_distortion.local_lattice_distortion(a,b,c)
 ##########################---------------------------------------------------------
-		
+
 					alpha, beta, gamma = lattice_angles(a,b,c)
-					VOL_POS = np.dot(a, np.cross(b,c))	
+					VOL_POS = np.dot(a, np.cross(b,c))
 					VOL_P.append(VOL_POS)	
 
-					ofile.write ("'\u03B1=' {} '\u03B2=' {} '\u03B3=' {}\n".format(alpha,beta,gamma))
-					ofile.write ("'||a||=' {}\n".format(np.linalg.norm(a)))
-					ofile.write ("'||b||=' {}\n".format(np.linalg.norm(b)))		
-					ofile.write ("'||c||=' {}\n".format(np.linalg.norm(c)))					
+					ofile.write(f"'\u03B1=' {alpha} '\u03B2=' {beta} '\u03B3=' {gamma}\n")
+					ofile.write(f"'||a||=' {np.linalg.norm(a)}\n")
+					ofile.write(f"'||b||=' {np.linalg.norm(b)}\n")
+					ofile.write(f"'||c||=' {np.linalg.norm(c)}\n")
 					#print ("#####------------------------------------------------")
-					
+
 					#print ("a={} \t ||a||={:10.6f}".format(a, np.linalg.norm(a)) )
 					#print ("b={} \t ||b||={:10.6f}".format(b, np.linalg.norm(b)) )
 					#print ("c={} \t ||c||={:10.6f}".format(c, np.linalg.norm(c)) )
 					print ("{:15s} {:6d} {:15.6f} {:15.6f} {:15.6f} {:15.6f}".format(fo.name, numberofatoms, np.linalg.norm(a), \
 					np.linalg.norm(b), np.linalg.norm(c), VOL_POS) )
-					
+
 					print ("'\u03B1=' {:6.6f} '\u03B2=' {:6.6f} '\u03B3=' {:6.6f} g={:6.6f}".format(alpha,beta,gamma,lld))
 					print ("."*5)
 					#print ('Vol= {:6.6f} A^3'.format(VOL_POS))						
 					ofile.write ("***************************************************\n")
 					ofile.close()
-	print ("_"*30)				
+	print ("_"*30)
 	print ("Number of folders detected: ", count)
 	return VOL_P
 
