@@ -33,8 +33,8 @@ green         = yellow
 #*********************DEFINITION FOR INPUTFILE**********************************
 
 if len(sys.argv) < 2:
-	sys.exit('Usage: %s <Exciting xml inputfile>' % sys.argv[0])
-    
+	sys.exit(f'Usage: {sys.argv[0]} <Exciting xml inputfile>')
+
 tree = xml.parse(sys.argv[1])
 root = tree.getroot()
 
@@ -82,7 +82,7 @@ lv = []
 for vect in struct.findall('crystal'):
 	#lat = vect.find('basevect')
 	for k in vect.findall('basevect'):
-		lv.append(k.text.split())	
+		lv.append(k.text.split())
 ###
 
 convertion = Bohr2angstrom*float(sc)
@@ -91,7 +91,7 @@ for list in lv:
 	float(list[1])*convertion, float(list[2])*convertion ) )
 	f.write ("\t{:10.8f} {:10.8f} {:10.8f}\n".format(float(list[0])*convertion, 
 	float(list[1])*convertion, float(list[2])*convertion ) )	
-    	
+
 #******************SPECIES CONTROL SECTION*********************************
 
 lab = []
@@ -100,7 +100,7 @@ for coord in struct.findall('species'):
 	jj = os.path.splitext(spe)
 	lab.append(jj[0])
 
-sp = []	
+sp = []
 for x in range(i-1):
 	print("{:s}".format(lab[x]))
 	f.write("\t%s" % lab[x])
@@ -132,15 +132,15 @@ for cart in root.findall('structure'):
 				ccl.append(atom.split())
 				lll.append(lab[i])
 #				print (atom, lab[i])
-				
+
 		for list in ccl:
 			print ("{:5.8f} {:5.8f} {:5.8f}".format(float(list[0])* Bohr2angstrom, 
 			float(list[1])* Bohr2angstrom, float(list[2])* Bohr2angstrom ) )
 			f.write ("{:5.8f} {:5.8f} {:5.8f}\n".format(float(list[0])* Bohr2angstrom, 
 			float(list[1])* Bohr2angstrom, float(list[2])* Bohr2angstrom ) )
-    			
+
 #**************************DIRECT COORDINATE*********************
-			
+
 	else:
 		print ("Direct")
 		f.write  ("Direct\n")
@@ -151,13 +151,13 @@ for cart in root.findall('structure'):
 				lll.append(lab[i])
 #				print (atom, lab[i])
 #				print (ccl)
-				
+
 		for list in ccl:
 			print ("{:5.8f} {:5.8f} {:5.8f}".format(float(list[0]), 
 			float(list[1]), float(list[2]) ) )
 			f.write ("{:5.8f} {:5.8f} {:5.8f}\n".format(float(list[0]), 
 			float(list[1]), float(list[2]) ) )
-    						
+
 print (colored("File generated ... ", 'green'))
 
 f.close()
