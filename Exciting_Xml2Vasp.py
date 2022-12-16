@@ -8,7 +8,6 @@ from sys import stdout
 from array import *
 import numpy as np
 
-from collections import Counter
 from termcolor import colored
 
 #*******************************DOCUMENTATION***********************************
@@ -42,122 +41,109 @@ struct = root.getchildren()[1] # pivot for controling element
 lattice = struct.getchildren()
 
 
-#*********************CONTROL SECTION FOR INPUT FILE***************************	
+with open('POSCAR.vasp', 'w+') as f:
+	print (colored("\nExtracting information from input file... ", 'yellow'))
+	print ('-'*80)
+	print (colored(" | Title is:  ", 'yellow'), root.findtext('title'))
+	f.write(root.findtext('title'))
 
-f = open('POSCAR.vasp', 'w+')
+	#*************************DETECTING # OF SPECIES******************************
 
-print (colored("\nExtracting information from input file... ", 'yellow'))
-print ('-'*80)
-print (colored(" | Title is:  ", 'yellow'), root.findtext('title'))
-f.write(root.findtext('title'))
+	i = 0
+	for _ in struct:
+		i = i+1
+	print (colored(" | Species detected:  ", 'yellow'), i-1	)
+	f.write(" |\t Number of species detected:  {:d}\n".format(i-1))
 
-#*************************DETECTING # OF SPECIES******************************
-
-i = 0
-for child in struct:
-	i = i+1
-print (colored(" | Species detected:  ", 'yellow'), i-1	)
-f.write(" |\t Number of species detected:  {:d}\n".format(i-1))
-
-#***************************SCALING DEFINITION********************************
-#reading from a file
-for sca in struct.findall('crystal'):
-	for key in sca.attrib:
-		if key == 'scale': # SCALING HAS TO BE CHANGED
-			sc = sca.get('scale')
+	#***************************SCALING DEFINITION********************************
+	#reading from a file
+	for sca in struct.findall('crystal'):
+		for key in sca.attrib:
+			sc = sca.get('scale') if key == 'scale' else 1.0
 			print (colored(" | Scaling factor is:  ", 'yellow'), float(sc))
-		else:
-			sc = float(1.00)
-			print (colored(" | Scaling factor is:  ", 'yellow'), float(sc))		
+	print (colored(" | Converting bohr to angstrom ... ", 'yellow'))
+	print (colored(" | Writing to a File in VASP format ... ", 'yellow'))
+	f.write("%f\n" % 1.0)
+	print ('-'*80)
 
+	#***********************LATTICE VECTORS SECTION************************
+	#reading from a file
+	lv = []
+	for vect in struct.findall('crystal'):
+		#lat = vect.find('basevect')
+		lv.extend(k.text.split() for k in vect.findall('basevect'))
+	###
 
-print (colored(" | Converting bohr to angstrom ... ", 'yellow'))
-print (colored(" | Writing to a File in VASP format ... ", 'yellow'))
-f.write("%f\n" % 1.0)
-print ('-'*80)
+	convertion = Bohr2angstrom*float(sc)
+	for list in lv:
+		print ("\t{:10.8f} {:10.8f} {:10.8f}".format(float(list[0])*convertion, 
+		float(list[1])*convertion, float(list[2])*convertion ) )
+		f.write ("\t{:10.8f} {:10.8f} {:10.8f}\n".format(float(list[0])*convertion, 
+		float(list[1])*convertion, float(list[2])*convertion ) )	
 
-#***********************LATTICE VECTORS SECTION************************
-#reading from a file
-lv = []
-for vect in struct.findall('crystal'):
-	#lat = vect.find('basevect')
-	for k in vect.findall('basevect'):
-		lv.append(k.text.split())
-###
+	#******************SPECIES CONTROL SECTION*********************************
 
-convertion = Bohr2angstrom*float(sc)
-for list in lv:
-	print ("\t{:10.8f} {:10.8f} {:10.8f}".format(float(list[0])*convertion, 
-	float(list[1])*convertion, float(list[2])*convertion ) )
-	f.write ("\t{:10.8f} {:10.8f} {:10.8f}\n".format(float(list[0])*convertion, 
-	float(list[1])*convertion, float(list[2])*convertion ) )	
+	lab = []
+	for coord in struct.findall('species'):
+		spe = coord.get('speciesfile')
+		jj = os.path.splitext(spe)
+		lab.append(jj[0])
 
-#******************SPECIES CONTROL SECTION*********************************
+	sp = []
+	for x in range(i-1):
+		print("{:s}".format(lab[x]))
+		f.write("\t%s" % lab[x])
+		sp.extend(lab[x] for _ in struct[x+1].iter('atom'))
+	f.write("\n")
 
-lab = []
-for coord in struct.findall('species'):
-	spe = coord.get('speciesfile')
-	jj = os.path.splitext(spe)
-	lab.append(jj[0])
+	for h in range(i-1):
+		print("\t{:d}".format(sp.count(lab[h])) )
+		f.write("\t%d" % sp.count(lab[h]))
+	f.write("\n")
 
-sp = []
-for x in range(i-1):
-	print("{:s}".format(lab[x]))
-	f.write("\t%s" % lab[x])
-	for s in struct[x+1].iter('atom'):
-		sp.append(lab[x])
-f.write("\n")
+	#*******************CONTROL SECTION FOR CARTESIAN COORDINATE***************
 
-for h in range(i-1):
-	print("\t{:d}".format(sp.count(lab[h])) )
-	f.write("\t%d" % sp.count(lab[h]))
-f.write("\n")
-
-#*******************CONTROL SECTION FOR CARTESIAN COORDINATE***************
-
-lll = []
-ccl = []
-checker = False
-for cart in root.findall('structure'):
-	ca = cart.get('cartesian')
-	for key in cart.attrib:
-		if key == 'cartesian':
-			checker = True	
-	if ca == "true":
-		print ("Cartesian")
-		f.write("Cartesian\n")
-		for i in range(i-1):
-			for s in struct[i+1].iter('atom'):
-				atom = s.get('coord')
-				ccl.append(atom.split())
-				lll.append(lab[i])
+	lll = []
+	ccl = []
+	checker = False
+	for cart in root.findall('structure'):
+		ca = cart.get('cartesian')
+		for key in cart.attrib:
+			if key == 'cartesian':
+				checker = True	
+		if ca == "true":
+			print ("Cartesian")
+			f.write("Cartesian\n")
+			for i in range(i-1):
+				for s in struct[i+1].iter('atom'):
+					atom = s.get('coord')
+					ccl.append(atom.split())
+					lll.append(lab[i])
 #				print (atom, lab[i])
 
-		for list in ccl:
-			print ("{:5.8f} {:5.8f} {:5.8f}".format(float(list[0])* Bohr2angstrom, 
-			float(list[1])* Bohr2angstrom, float(list[2])* Bohr2angstrom ) )
-			f.write ("{:5.8f} {:5.8f} {:5.8f}\n".format(float(list[0])* Bohr2angstrom, 
-			float(list[1])* Bohr2angstrom, float(list[2])* Bohr2angstrom ) )
+			for list in ccl:
+				print ("{:5.8f} {:5.8f} {:5.8f}".format(float(list[0])* Bohr2angstrom, 
+				float(list[1])* Bohr2angstrom, float(list[2])* Bohr2angstrom ) )
+				f.write ("{:5.8f} {:5.8f} {:5.8f}\n".format(float(list[0])* Bohr2angstrom, 
+				float(list[1])* Bohr2angstrom, float(list[2])* Bohr2angstrom ) )
 
 #**************************DIRECT COORDINATE*********************
 
-	else:
-		print ("Direct")
-		f.write  ("Direct\n")
-		for i in range(i-1):
-			for s in struct[i+1].iter('atom'):
-				atom = s.get('coord')
-				ccl.append(atom.split())
-				lll.append(lab[i])
+		else:
+			print ("Direct")
+			f.write  ("Direct\n")
+			for i in range(i-1):
+				for s in struct[i+1].iter('atom'):
+					atom = s.get('coord')
+					ccl.append(atom.split())
+					lll.append(lab[i])
 #				print (atom, lab[i])
 #				print (ccl)
 
-		for list in ccl:
-			print ("{:5.8f} {:5.8f} {:5.8f}".format(float(list[0]), 
-			float(list[1]), float(list[2]) ) )
-			f.write ("{:5.8f} {:5.8f} {:5.8f}\n".format(float(list[0]), 
-			float(list[1]), float(list[2]) ) )
+			for list in ccl:
+				print ("{:5.8f} {:5.8f} {:5.8f}".format(float(list[0]), 
+				float(list[1]), float(list[2]) ) )
+				f.write ("{:5.8f} {:5.8f} {:5.8f}\n".format(float(list[0]), 
+				float(list[1]), float(list[2]) ) )
 
-print (colored("File generated ... ", 'green'))
-
-f.close()
+	print (colored("File generated ... ", 'green'))
