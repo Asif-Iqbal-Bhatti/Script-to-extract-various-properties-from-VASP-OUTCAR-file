@@ -1,15 +1,13 @@
-# Code to extract Elastic properties, Energy, lattice parameter from VASP output files 💫
-**_Python3 or later: High Entropy Alloys analysis_**
+# Code to extract Elastic properties, Energy, and lattice parameter from VASP output files
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 ![pypi](https://img.shields.io/pypi/v/pybadges.svg)
 ![versions](https://img.shields.io/pypi/pyversions/pybadges.svg)
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
 
-**==> supercell.py script construct bcc/fcc supercell for High Entropy Alloys <==**
+==> supercell.py script constructs a bcc/fcc supercell for high-entropy alloys.
 
-If you have performed a number of calculations and want to obtain the lattice parameters, energy and volume from each directory (in a given directory) then run this script and it will loop over all the directories and find POSCAR file and output the lattice parameters, energy and volume, moreover it also scans the CONTCAR file and compute the volume and lattice parameters, and print on the screen volume difference upon structure minimization. 
-For Elastic constants this gives an indication how much the cell has deformed and gives us the indication whether we need to increase ENCUT or KPOINTS to minimize the Pulay stress as indicated on VASP manual.
+This repository contains a set of Python scripts for analyzing High Entropy Alloys using VASP output files. The scripts can extract lattice parameters, energy, and volume from each directory in a given parent directory. Additionally, it can scan the CONTCAR file, compute the volume and lattice parameters, and print the volume difference upon structure minimization. The extracted data can be used to analyze the Elastic Constants and make decisions on adjusting ENCUT or KPOINTS to minimize Pulay stress, as indicated in the VASP manual.
 
 ```
 **USAGE** : Just run the Main_file.py it will call all the modules
@@ -24,10 +22,11 @@ OUTCAR
 Python Main_file.py
 ```
 _______________________
-_For VASP structural minimization these tag should be used: IBRION = 2; ISIF = 3; EDIFF= 10**-8. VASP has implemented the stress method (First derivative approach) and with few deformation it gives the Stiffness Constants directly. However as the system size gets larger then it becomes very expensive to compute. The other appraoch is the Energy-strain method where Langragian strain are applied to the cell and the resulting energy is calculated for a number of deformations. After this polynomial fitting is done and second derivative is calculated at equilibrium volume._
+## Structural Minimization in VASP:  
+For VASP structural minimization, the following tags should be used: IBRION = 2; ISIF = 3; EDIFF = 10**-8. VASP implements both the stress method (First derivative approach) and the Energy-strain method for Elastic Constants calculation. The Energy-strain method involves applying Lagrangian strains to the cell and calculating the resulting energy for various deformations. Polynomial fitting is then performed, and the second derivative is calculated at equilibrium volume.
 
 ```
-An excercise to print Cij matrix in a pythonic way: 2D array is created as List of Lists unlike C++ where you define by C[i][j]
+An exercise to print Cij matrix in a Pythonic way: 2D array is created as a List of Lists unlike C++ where you define by C[i][j]
 
 def print_Cij_Matrix():
 	Bij = []
@@ -49,15 +48,15 @@ ref: [materialsproject](https://wiki.materialsproject.org/Elasticity_calculation
 
 Script to parse Hessian Matrix from a file
 
-USAGE : To parse VASP vasprun.xml input file to extract Hessian Matrix Output file has already been defined in the code (hessian.dat).
+USAGE: To parse the VASP vasprun.xml input file to extract the Hessian Matrix Output file has already been defined in the code (hessian.dat).
 
 CAUTION: Use at your own risk (NOTEVEN IMPLIED GUARANTEED, WHATSOEVER), the code has been tested but the user in the end will have to verify the ouput.
 
-Xpath is useful tool for directly accessing the element in a Node
+Xpath is a useful tool for directly accessing the element in a Node
 
 -> CHECK this website for lxml introduccion: https://lxml.de/tutorial.html & -> https://github.com/lxml/lxml
 
-NB: The Matrix is obtained from VASP, vasprun.xml file. It contians the hessian matrix that can be edited with appropriate script.
+NB: The Matrix is obtained from VASP, vasprun.xml file. It contains the hessian matrix that can be edited with the appropriate script.
 
 The complication that arises by parsing the data from the file is the trailing empty lines and tabs that need to be deleted before it can be read. In the case of a simple file format, there is no need for it. But if the file contains irregular data entry such as empty lines with commas and spaces then it needs to be formatted.
 
